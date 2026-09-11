@@ -1,9 +1,9 @@
 # Récit visuel : de la donnée brute au modèle
 
-Ce document est le fil conducteur des 16 visualisations du projet. Chacune répond à une
+Ce document est le fil conducteur des 17 visualisations du projet. Chacune répond à une
 question posée avant de la tracer, et chaque titre de section énonce **ce que la figure
 montre**, pas ce qu'elle représente. Les figures sont produites par les notebooks des
-étapes 2, 4 et 5 ; aucun chiffre n'est saisi à la main ici.
+étapes 2, 4, 5 et 6 ; aucun chiffre n'est saisi à la main ici.
 
 La question à laquelle tout ce qui suit se rapporte : **peut-on prédire le taux d'emploi
 salarié d'une formation six mois après le diplôme, à partir de ses seules
@@ -16,6 +16,21 @@ caractéristiques ?**
 | 3 | Deux résultats qui contredisent l'intuition | 7, 9 |
 | 4 | Que faut-il refuser de donner au modèle ? | 8, 10 |
 | 5 | Que vaut le modèle, et où échoue-t-il ? | 12 à 16 |
+
+---
+
+## La figure à retenir si on n'en retient qu'une
+
+![Vue d'ensemble](figures_eda/fig17_vue_ensemble.png)
+
+Quatre panneaux, un par étape du raisonnement : l'objet à prédire, le facteur qui sépare le
+plus, le contexte temporel, et ce que le modèle en retient.
+
+La correspondance entre les panneaux (b) et (d) est le point à voir : le facteur que
+l'analyse exploratoire avait identifié comme dominant, la vocation du diplôme, est aussi
+celui que le modèle utilise le plus. L'analyse et le modèle racontent la même histoire.
+
+Les seize figures qui suivent développent ces quatre panneaux dans l'ordre du raisonnement.
 
 ---
 
@@ -296,6 +311,9 @@ notebooks des étapes 2, 4 et 5 :
 - **Aucune 3D, aucun camembert.** Les comparaisons de catégories passent par des barres
   horizontales triées, les distributions par histogramme et boîte à moustaches, les
   trajectoires par courbes avec intervalle.
+- **Source et période** : apposées en pied de chaque figure exportée, par une fonction
+  `annoter_source()` commune. Une figure finit toujours par circuler seule, détachée de son
+  notebook : elle doit porter d'où viennent ses chiffres.
 - **Export** : 150 ppp, cadrage serré, format PNG.
 
 Ces règles sont vérifiables : `pie(` et `projection=` n'apparaissent nulle part dans les

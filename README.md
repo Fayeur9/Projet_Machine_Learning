@@ -184,7 +184,7 @@ Ne remettez pas la documentation à la fin. Le notebook doit rester exécutable 
 | Data Dictionary | .md | [DATA_DICTIONARY.md](DATA_DICTIONARY.md), 32 colonnes | ☑ |
 | Notebooks documentés et exécutables | .ipynb | [notebooks/](notebooks/), 5 notebooks, 0 erreur | ☑ |
 | **Modèle entraîné (pipeline complète)** | .joblib | `modeles/modele_final_random_forest.joblib` | ☑ |
-| Visualisations (7 min.) | .png | [figures_eda/](figures_eda/), 16 figures | ☑ |
+| Visualisations (7 min.) | .png | [figures_eda/](figures_eda/), 16 figures, récit dans [Rapport_Visualisation.md](Rapport_Visualisation.md) | ☑ |
 | Présentation / rapport | .pdf ou .pptx | hors dépôt | ☐ |
 
 ---

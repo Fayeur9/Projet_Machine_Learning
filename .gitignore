@@ -1,0 +1,21 @@
+# Éditeurs / IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+
+# Données : le dossier csv/ (~940 Mo décompressé) n'est pas versionné.
+# Seule l'archive csv.zip, à la racine, l'est. Voir README.md
+/csv/
+*.csv
+
+# Fichiers système
+.DS_Store
+Thumbs.db

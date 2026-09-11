@@ -147,11 +147,11 @@ l'emploi non salarié, mesuré séparément par
 3. **Granularité de la cible** : la cible est un taux agrégé par formation, pas une
    observation individuelle. Le modèle prédit une performance de formation, pas
    l'employabilité d'une personne. À dire explicitement en soutenance.
-4. **Couverture de la seconde source** : le référentiel des établissements n'apparie que
-   79,7 % des lignes, et les établissements absents ne sont pas un échantillon au hasard,
-   ce sont les plus petits et les plus souvent privés. Ses variables sont donc exploitées
-   en analyse, mais pas versées dans le modèle sans une décision explicite sur les 20 %
-   non appariés.
+4. **Apport nul de la seconde source au modèle** : le référentiel des établissements
+   n'apparie que 79,7 % des lignes, et les absents ne sont pas un échantillon au hasard,
+   ce sont les plus petits et les plus souvent privés. Testé à l'étape 4, il ne gagne que
+   0,020 point de MAE, six fois moins que le bruit entre plis de validation. Ses variables
+   servent donc à l'analyse, pas au modèle. Le résultat est reporté plutôt que masqué.
 
 ---
 
@@ -163,6 +163,8 @@ d'établissements en JSON, permet de répondre à cinq questions business vérif
 aboutit à un problème de régression bien posé. Tous les critères de validation du guide
 sont désormais conformes.
 
-Le point ouvert n'est plus le cadrage mais une décision de modélisation : faut-il verser
-les variables du référentiel dans le modèle malgré 20 % de lignes non appariées ? La
-réponse se mesure contre le modèle actuel, elle ne se décrète pas.
+La décision de modélisation laissée ouverte par l'étape 1 est tranchée : mesurées à
+l'étape 4, les variables du référentiel ne gagnent que 0,020 point de MAE, soit six fois
+moins que le bruit de la validation croisée. Elles ne sont pas retenues. La seconde source
+reste utile à l'analyse et satisfait le critère des deux formats ; elle n'améliore pas le
+modèle, et c'était mesurable.

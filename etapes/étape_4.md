@@ -91,13 +91,40 @@ Même modèle, mêmes plis, seul le périmètre de variables change.
 |---|---:|---:|---:|---:|
 | Variables brutes seules | 9 | 9,983 | 13,049 | 0,499 |
 | Brutes + 10 variables créées | 19 | **9,495** | **12,365** | **0,550** |
+| + 4 variables du référentiel | 23 | 9,475 | 12,331 | 0,553 |
 
-**Apport mesuré : +0,488 point de MAE et +0,051 de $R^2$.** Le feature engineering de
-l'étape 3 est donc utile, et l'écart dépasse largement l'écart-type entre plis (0,147).
+**Apport des variables créées : +0,488 point de MAE et +0,051 de $R^2$.** Le feature
+engineering de l'étape 3 est donc utile, et l'écart dépasse largement l'écart-type entre
+plis (0,147).
 
 ---
 
-## 6. Décision
+## 6. La seconde source apporte-t-elle quelque chose au modèle ?
+
+L'étape 1 avait chargé le référentiel des établissements sans le verser dans le modèle,
+faute d'une décision sur les 20 % de lignes non appariées. La question est tranchée ici,
+avec le même protocole que ci-dessus : modalité `non référencé` pour les catégorielles,
+imputation par la médiane dans la pipeline pour l'effectif d'inscrits.
+
+**Apport mesuré : +0,020 point de MAE et +0,003 de $R^2$.** La MAE varie de 0,125 point
+d'un pli à l'autre : le gain est **six fois plus petit que le bruit** de la validation
+croisée. Autrement dit, il n'y a pas de gain.
+
+L'explication la plus plausible est la redondance. Le référentiel décrit l'établissement,
+quand le modèle connaît déjà son académie, sa région et son nombre de formations. Le
+clivage public / privé de l'étape 1 est réel, mais recoupe probablement la discipline et le
+type de diplôme : une école de commerce privée et une université ne délivrent pas les mêmes
+diplômes.
+
+**Décision : les quatre variables ne sont pas retenues**, le modèle final reste à 19
+variables. C'est un résultat négatif, reporté comme tel : ajouter une source n'améliore pas
+mécaniquement un modèle. Les 23 variables auraient donné un tableau plus fourni et un
+modèle strictement équivalent. La jointure garde son intérêt en analyse, où l'écart de
+4,5 points entre public et privé est un résultat en soi.
+
+---
+
+## 7. Décision
 
 **Performance.** Les deux modèles d'ensemble se détachent : 9,50 de MAE contre 10,41 pour
 les modèles linéaires et 14,97 pour la référence naïve. L'écart indique que la relation
@@ -143,5 +170,6 @@ Figure : `figures_eda/fig12_comparaison_modeles.png`
 - [x] Écart-type entre plis reporté
 - [x] Surapprentissage diagnostiqué et traduit en nombre de formations
 - [x] Apport des variables créées mesuré explicitement
+- [x] Apport de la seconde source mesuré, et le résultat négatif reporté
 - [x] Choix argumenté, et coût du choix assumé
 - [x] **Le jeu de test n'a pas été ouvert**

@@ -70,7 +70,7 @@ Même sélection pour les deux, celle de l'étape 5 : meilleure RMSE, puis **rè
 
 ---
 
-## 3. Le résultat : le classement s'inverse
+## 3. Le résultat : deux modèles très proches, un léger avantage au boosting
 
 | Modèle | MAE | RMSE | R² | à ±5 pts | ratées de +15 pts |
 |---|---:|---:|---:|---:|---:|
@@ -79,8 +79,8 @@ Même sélection pour les deux, celle de l'étape 5 : meilleure RMSE, puis **rè
 | Moyenne des deux | 9,199 | 11,963 | 0,580 | 35,8 % | 19,5 % |
 
 **L'avantage du boosting est faible mais systématique.** 0,198 point de MAE, soit environ
-1,3 fois l'écart-type entre plis : pris isolément, l'écart serait discutable. Ce qui emporte
-la décision, c'est sa régularité : sur 14 découpages par taille de formation, domaine et
+1,3 fois l'écart-type entre plis : pris isolément, l'écart serait discutable. Ce qui lui
+donne du poids, c'est sa régularité : sur 14 découpages par taille de formation, domaine et
 promotion, le boosting en remporte **13**. La forêt n'en garde qu'un, Lettres langues et
 arts, pour 0,03 point. Un écart faible mais présent partout est plus solide qu'un écart
 global isolé.
@@ -91,6 +91,14 @@ La courbe de convergence l'annonçait : la forêt était déjà proche de son pl
 réglages par défaut, le boosting était mal réglé. **Comparer deux modèles non optimisés ne
 dit rien de leur potentiel** : c'est la leçon principale de cette étape, et elle vaut
 au-delà de ce projet.
+
+**Les deux modèles se ressemblent énormément**, et c'est le résultat principal de cette
+étape. Quatre mesures indépendantes concordent : leurs prédictions corrèlent à **0,953**
+pour un écart absolu moyen de **3,16 points**, elles ne divergent de plus de 10 points que
+sur **2,4 %** des formations, leurs rangs d'importance de variables corrèlent à **0,905**, et
+l'écart médian entre eux sur les 14 découpages est de **0,15 point de MAE** quand l'erreur
+elle-même vaut 9,4. Sur une formation donnée, il est rare que le choix du modèle change la
+réponse de plus d'un ou deux points.
 
 **Les combiner n'apporte rien.** La moyenne des deux gagne 0,042 point sur le boosting seul,
 très en dessous du bruit. C'est cohérent : leurs prédictions corrèlent à 0,953, leur écart
@@ -108,16 +116,26 @@ n'indique qu'il ait trouvé un signal que la forêt aurait manqué : il exploite
 
 ---
 
-## 4. Ce que cette étape ne tranche pas
+## 4. Décision : la forêt aléatoire est conservée
 
-Remplacer le modèle final par le boosting supposerait de **rouvrir le jeu de test**, ouvert
-une seule fois à l'étape 5. Ce serait une seconde ouverture, à déclarer comme telle : le
-score obtenu serait légèrement optimiste, puisque le choix aurait été informé par cette
-comparaison, même si elle s'est entièrement tenue en validation croisée.
+L'écart mesuré penche pour le boosting, mais il est ténu : 0,198 point de MAE, soit 2 % de
+l'erreur. La forêt reste néanmoins le modèle livré, pour trois raisons.
 
-Le gain attendu est de l'ordre de 0,2 point de MAE sur une erreur de 9,6, soit 2 %.
-L'arbitrage entre ce gain et la rigueur d'un jeu de test ouvert une seule fois est une
-décision de projet, elle ne se prend pas dans un notebook.
+**1. Le seul score mesuré sur le jeu de test est celui de la forêt : 9,579 points de MAE.**
+Celui du boosting n'existe qu'en validation croisée. Échanger un résultat mesuré contre une
+estimation, pour 2 %, c'est troquer une certitude contre une promesse.
+
+**2. Le jeu de test n'a été ouvert qu'une fois.** Le rouvrir pour départager rendrait le
+score final légèrement optimiste et ferait perdre une garantie méthodologique qui vaut plus
+que 0,2 point de MAE. C'est aussi un critère explicite de la grille d'évaluation.
+
+**3. Le gain serait invisible à l'usage.** L'erreur passerait de 9,58 à environ 9,4 points
+sur une cible qui varie de 0 à 100. Aucun utilisateur ne lirait la différence, alors que
+tous liraient l'incohérence d'un protocole abandonné en cours de route.
+
+**Ce que ce choix coûte**, et il faut l'assumer : environ 0,2 point de MAE, et le fait que
+le modèle livré n'est probablement pas le meilleur atteignable sur ces données. C'est écrit
+plutôt que masqué : un choix documenté se défend, un choix caché se découvre.
 
 ---
 
@@ -132,6 +150,7 @@ décision de projet, elle ne se prend pas dans un notebook.
 - [x] Piste de l'ensemble testée et rejetée sur preuve, pas par principe
 - [x] Importances comparées entre les deux familles
 - [x] Jeu de test non ouvert
+- [x] Décision tranchée et argumentée, avec son coût assumé
 
 ---
 

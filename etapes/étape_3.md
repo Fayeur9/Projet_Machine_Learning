@@ -109,18 +109,34 @@ des trois formes le modèle utilise réellement.
 
 ### Contrôle anti-fuite
 
-Aucune variable créée n'utilise la cible. Deux tests exécutables le vérifient.
+Aucune variable créée n'utilise la cible. Deux tests exécutables le vérifient, et tous deux
+rejouent le dictionnaire `VARIABLES_CREEES` qui sert à construire les variables : ils
+portent donc sur les dix variables réelles, sans liste recopiée à côté qui pourrait dériver.
 
-1. **Indépendance à la cible.** La cible est permutée aléatoirement, puis les variables sont
-   recalculées : elles sont strictement identiques. Un `assert` échoue sinon.
-2. **Sensibilité au découpage.** Trois variables sont des agrégats calculés sur l'ensemble
-   du jeu. Recalculées sur le seul jeu d'apprentissage, l'écart relatif médian de
-   `taille_mediane_secteur` est de **0,00 %** (maximum 15,79 %), et la corrélation entre les
-   deux calculs de `nb_formations_etablissement` est de **0,9986**.
+1. **Indépendance à la cible.** La cible est permutée aléatoirement, puis **les dix
+   variables** sont recalculées : elles sont strictement identiques. Un `assert` échoue
+   sinon.
+2. **Sensibilité au découpage.** **Quatre variables** lisent d'autres lignes que la leur.
+   Recalculées sur le seul jeu d'apprentissage :
 
-Ces variables décrivent le catalogue d'un établissement ou la taille usuelle d'un secteur :
-elles seraient connues d'un référentiel avant toute prédiction. Aucune information sur la
-cible du test ne transite par elles.
+| Variable | Écart médian | Écart maximal | Lignes modifiées | Corrélation |
+|---|---:|---:|---:|---:|
+| `taille_mediane_secteur` | 0,00 % | 15,79 % | 44,8 % | 0,9970 |
+| `nb_formations_etablissement` | 4,20 % | 50,00 % | 77,1 % | 0,9986 |
+| `part_sortants_etablissement` | **20,95 %** | 3 791 % | 89,2 % | 0,9734 |
+| `nb_etablissements_par_diplome` | 0,00 % | 66,67 % | 40,9 % | 0,9982 |
+
+Trois de ces variables décrivent le catalogue d'un établissement ou la taille usuelle d'un
+secteur : un référentiel les donnerait avant toute prédiction, et elles ne bougent quasiment
+pas selon le découpage.
+
+`part_sortants_etablissement` fait exception, et c'est mécanique : elle divise par la somme
+des sortants de l'établissement pour une promotion, somme que le retrait de 20 % des lignes
+ampute. Ce n'est pas une fuite de cible, le premier test l'exclut, mais c'est une variable
+non reproductible à partir du seul jeu d'apprentissage. Elle est conservée parce qu'en usage
+réel l'effectif d'un établissement est connu du référentiel et non reconstitué depuis un
+échantillon, et parce que son poids reste modeste : 14e sur 19 à l'importance par
+permutation de l'étape 5. Le point est écrit plutôt que laissé à découvrir.
 
 ---
 

@@ -178,14 +178,14 @@ Ne remettez pas la documentation à la fin. Le notebook doit rester exécutable 
 
 ## Livrables attendus
 
-| Livrable | Format | Vérifié |
-|----------|--------|---------|
-| Dataset final nettoyé | .parquet ou .csv | ☐ |
-| Data Dictionary | .md | ☐ |
-| Notebook documenté et exécutable | .ipynb | ☐ |
-| **Modèle entraîné (pipeline complète)** | .joblib | ☐ |
-| Visualisations (7 min.) | .png | ☐ |
-| Présentation / rapport | .pdf ou .pptx | ☐ |
+| Livrable | Format | Fichier produit | Vérifié |
+|----------|--------|---|---------|
+| Dataset final nettoyé | .csv | `csv/dataset_phase3_final.csv`, 17 065 × 32 | ☑ |
+| Data Dictionary | .md | [DATA_DICTIONARY.md](DATA_DICTIONARY.md), 32 colonnes | ☑ |
+| Notebooks documentés et exécutables | .ipynb | [notebooks/](notebooks/), 5 notebooks, 0 erreur | ☑ |
+| **Modèle entraîné (pipeline complète)** | .joblib | `modeles/modele_final_random_forest.joblib` | ☑ |
+| Visualisations (7 min.) | .png | [figures_eda/](figures_eda/), 16 figures | ☑ |
+| Présentation / rapport | .pdf ou .pptx | hors dépôt | ☐ |
 
 ---
 

@@ -13,7 +13,9 @@ reproductible, pas seulement documenté.
 
 ---
 
-## 1. Source identifiée
+## 1. Sources identifiées
+
+### Source 1 (principale) : InserSup, en CSV
 
 | Élément | Valeur |
 |---|---|
@@ -31,8 +33,30 @@ reproductible, pas seulement documenté.
 | Licence | Licence Ouverte / Open Licence (Etalab) : réutilisation libre avec mention de la source |
 | Portail | data.enseignementsup-recherche.gouv.fr |
 
-Une seule source à ce jour. L'ajout d'une seconde source dans un second format reste à
-faire, voir étape 0 section 4.
+### Source 2 (enrichissement) : référentiel des établissements, en JSON
+
+| Élément | Valeur |
+|---|---|
+| Jeu | `fr-esr-principaux-etablissements-enseignement-superieur` |
+| Fichier local | `Projet/csv/referentiel_etablissements.json` |
+| Format | **JSON**, via l'API REST Explore v2.1 (Opendatasoft) |
+| Point d'accès | `data.enseignementsup-recherche.gouv.fr/api/explore/v2.1/catalog/datasets/fr-esr-principaux-etablissements-enseignement-superieur/exports/json` |
+| Taille | 805 Ko |
+| Volume | 245 établissements × 100 champs |
+| Encodage | UTF-8, structures imbriquées (`type_d_etablissement` est une liste, `coordonnees` un objet) |
+| Producteur | Ministère de l'Enseignement supérieur et de la Recherche |
+| Licence | Licence Ouverte / Open Licence (Etalab) |
+| Clé de jointure | `uai` vers `Code UAI de l'établissement` |
+
+Deux sources, deux formats. La seconde est chargée et jointe dans la section 6 du notebook
+[`etape_1_extraction.ipynb`](../notebooks/etape_1_extraction.ipynb). Elle apporte quatre
+variables absentes d'InserSup : secteur public ou privé, statut juridique, département et
+effectif d'inscrits de l'établissement.
+
+**Apparie 184 des 365 établissements (50,4 %), soit 13 604 des 17 065 lignes (79,7 %).**
+Le référentiel ne couvre que les établissements « principaux » : les absents sont les
+petites écoles privées. Premier résultat : 56,21 % de taux d'emploi moyen dans le public
+contre 51,67 % dans le privé.
 
 ---
 
@@ -135,11 +159,12 @@ absentes. À mentionner comme limite du projet.
 
 ---
 
-## 4. Tableau récapitulatif de la source
+## 4. Tableau récapitulatif des sources
 
 | Source | Format | Fichier | Lignes | Colonnes | Observations |
 |---|---|---|---|---|---|
 | 1 | CSV | `Projet/csv/dataset.csv` | 1 036 781 | 101 | BOM UTF-8, `sep=';'`, manquants `nd`/`ns`, 9 colonnes entièrement vides, agrégats mélangés au détail |
+| 2 | JSON | `Projet/csv/referentiel_etablissements.json` | 245 | 100 | API REST, champs imbriqués (listes et objets) à aplatir, clé `uai` unique, couvre 79,7 % des lignes de la source 1 |
 
 ---
 
@@ -162,9 +187,12 @@ absentes. À mentionner comme limite du projet.
 |---|---|---|---|---|
 | `csv/dataset_phase1_modelisation.csv` | 17 065 | 23 | 5,0 Mo | Phase 7 : une ligne = une formation × promotion, sans double comptage |
 | `csv/dataset_phase1_analytique.csv` | 438 696 | 31 | 147 Mo | Phases 2 et 5 : tous niveaux conservés, marqués par `ligne_agregee`, `promotion_cumulee`, `marge_geo_disc` |
+| `csv/referentiel_etablissements.json` | 245 | 100 | 805 Ko | Seconde source : caractéristiques d'établissement jointes par `Code UAI` |
 
-Le jeu analytique est exclu du dépôt git par `.gitignore` : il pèse plus que la limite
-de 100 Mo par fichier de GitHub et se régénère en une exécution du notebook.
+Le dossier `csv/` est exclu du dépôt git par `.gitignore` : les fichiers pèsent près de
+940 Mo décompressés, dont un jeu analytique au-delà de la limite de 100 Mo par fichier de
+GitHub. Tout est regroupé dans `csv.zip`, à la racine, et se régénère par une exécution des
+notebooks.
 
 Le jeu analytique conserve les agrégats parce que l'EDA en a besoin, notamment pour la
 question business 3 sur le genre, la nationalité et le régime d'inscription. Les
@@ -219,20 +247,25 @@ max 100. Unimodale et centrée, adaptée à une régression.
 - [x] Les deux jeux produits sont exportés
 - [x] L'entonnoir de filtrage est chiffré et rejoué dans le notebook
 - [x] L'origine et la licence des données sont documentées
-- [ ] **Une seconde source dans un second format est chargée** : reste à faire
+- [x] **Une seconde source dans un second format est chargée** : référentiel des
+  établissements en JSON, via l'API Explore v2.1, jointe sur `Code UAI`
+- [x] La jointure est contrôlée : aucune ligne dupliquée, couverture chiffrée (79,7 %)
 
 ---
 
 ## 8. Réponses aux questions de réflexion du guide
 
-**Qualité des sources.** Source unique et institutionnelle, donc fiable sur la collecte,
-mais dégradée par la politique de diffusion : 58 % des lignes n'ont pas de cible et rien
-n'est publié sous 20 sortants.
+**Qualité des sources.** Deux sources institutionnelles, donc fiables sur la collecte. La
+principale est dégradée par la politique de diffusion : 58 % des lignes n'ont pas de cible
+et rien n'est publié sous 20 sortants. La seconde est propre mais volontairement partielle,
+puisqu'elle ne recense que les établissements « principaux ».
 
-**Jointures à venir.** Le pont naturel vers une seconde source est le
-`Code UAI de l'établissement`, identifiant national renseigné sur 100 % des lignes et
-présent dans la plupart des référentiels d'établissements. Attention : il vaut `all` sur
-les lignes d'agrégat national, valeur à exclure avant toute jointure.
+**Jointure réalisée.** Le pont entre les deux sources est le
+`Code UAI de l'établissement`, identifiant national renseigné sur 100 % des lignes. Il
+vaut `all` sur les lignes d'agrégat national : ces lignes sont déjà écartées par
+l'entonnoir, donc aucune ne pollue la jointure. Celle-ci est faite en `left` et vérifiée
+par `assert` sur le nombre de lignes, pour qu'un établissement manquant au référentiel ne
+fasse jamais disparaître une observation d'InserSup.
 
 **Données manquantes.** Le taux d'emploi global (salarié et non salarié réunis) aurait
 été une meilleure cible que le seul emploi salarié. Il est absent de ce millésime. Les

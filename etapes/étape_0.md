@@ -70,13 +70,18 @@ l'emploi non salarié, mesuré séparément par
 - Origine : Données publiques du ministère de l'Enseignement supérieur
 - Accès : Libre, déjà téléchargé localement
 
-### Source 2 - Complémentaire (à acquérir)
-- **Statut : non acquise.** C'est le principal manque du cadrage actuel.
-- Piste retenue : API JSON de data.gouv.fr / data.enseignementsup-recherche.gouv.fr,
-  qui expose le même jeu INSERSUP en JSON. Cela fournirait le **second format** exigé
-  par le guide sans changer de sujet.
-- Piste alternative : référentiel des établissements (annuaire de l'éducation) pour
-  enrichir par la géographie précise, la taille ou le statut public/privé.
+### Source 2 - Complémentaire (acquise) *(révisé)*
+- **Statut : acquise.** Référentiel des principaux établissements d'enseignement
+  supérieur, `fr-esr-principaux-etablissements-enseignement-superieur`.
+- Format : **JSON**, via l'API REST Explore v2.1 du portail. Second format obtenu sans
+  changer de sujet ni de producteur.
+- Fichier : `Projet/csv/referentiel_etablissements.json`, 805 Ko, 245 établissements ×
+  100 champs, licence Ouverte Etalab.
+- Apport : secteur public ou privé, statut juridique, département et effectif d'inscrits
+  de l'établissement. Aucune de ces informations n'existe dans INSERSUP.
+- Jointure : `uai` vers `Code UAI de l'établissement`, réalisée et contrôlée à l'étape 1.
+  Couvre 184 des 365 établissements (50,4 %) et 79,7 % des lignes, le référentiel ne
+  recensant que les établissements « principaux ».
 
 ### Source 3 - Enrichissement (optionnelle)
 - Données régionales sur le marché de l'emploi, pour rapporter le taux d'insertion au
@@ -94,7 +99,7 @@ l'emploi non salarié, mesuré séparément par
 | Type de problème | Tranché | Régression | Conforme |
 | Accessibilité | Déjà téléchargée | Oui, en local | Conforme |
 | Répartition | Pas de classe ultra-minoritaire | Sans objet (régression), distribution centrée | Conforme |
-| Nombre de sources | ≥ 2 sources, ≥ 2 formats | 1 source, 1 format | **Non conforme** |
+| Nombre de sources | ≥ 2 sources, ≥ 2 formats | 2 sources, 2 formats (CSV et JSON) | Conforme après révision |
 
 ---
 
@@ -120,8 +125,9 @@ l'emploi non salarié, mesuré séparément par
 
 ### Sources de données
 - [x] J'ai identifié une source principale, téléchargée et chargée
-- [ ] **J'ai au moins 2 sources de données** : une seule à ce jour
-- [ ] **J'ai au moins 2 formats différents** : CSV uniquement
+- [x] **J'ai au moins 2 sources de données** : INSERSUP et le référentiel des
+  établissements
+- [x] **J'ai au moins 2 formats différents** : CSV et JSON (API REST)
 - [x] Les données couvrent la période souhaitée (2019-2024)
 
 ### Faisabilité
@@ -141,13 +147,22 @@ l'emploi non salarié, mesuré séparément par
 3. **Granularité de la cible** : la cible est un taux agrégé par formation, pas une
    observation individuelle. Le modèle prédit une performance de formation, pas
    l'employabilité d'une personne. À dire explicitement en soutenance.
-4. **Une seule source** à ce stade, voir section 4.
+4. **Couverture de la seconde source** : le référentiel des établissements n'apparie que
+   79,7 % des lignes, et les établissements absents ne sont pas un échantillon au hasard,
+   ce sont les plus petits et les plus souvent privés. Ses variables sont donc exploitées
+   en analyse, mais pas versées dans le modèle sans une décision explicite sur les 20 %
+   non appariés.
 
 ---
 
 ## 8. Conclusion
 
-Le cadrage reste valide après révision de la cible. Le projet repose sur un dataset
-volumineux et accessible, permet de répondre à cinq questions business vérifiables et
-aboutit à un problème de régression bien posé. Le point à traiter en priorité est
-l'ajout d'une seconde source dans un second format.
+Le cadrage est valide après révision de la cible et ajout de la seconde source. Le projet
+repose sur un dataset volumineux et accessible, complété par un référentiel
+d'établissements en JSON, permet de répondre à cinq questions business vérifiables et
+aboutit à un problème de régression bien posé. Tous les critères de validation du guide
+sont désormais conformes.
+
+Le point ouvert n'est plus le cadrage mais une décision de modélisation : faut-il verser
+les variables du référentiel dans le modèle malgré 20 % de lignes non appariées ? La
+réponse se mesure contre le modèle actuel, elle ne se décrète pas.

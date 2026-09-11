@@ -22,7 +22,8 @@ Le dossier `csv/` pèse environ **940 Mo** décompressé : il n'est donc **pas v
 unzip csv.zip -d csv/
 ```
 
-L'archive contient les quatre CSV du pipeline, plus les deux journaux JSON :
+L'archive contient les quatre CSV du pipeline, la seconde source en JSON, et les deux
+journaux :
 
 | Fichier | Lignes | Poids | Rôle |
 |---|---:|---:|---|
@@ -30,8 +31,13 @@ L'archive contient les quatre CSV du pipeline, plus les deux journaux JSON :
 | `dataset_phase1_analytique.csv` | 438 696 | 148 Mo | Après filtre « cible renseignée » : base des analyses par genre et par ventilation |
 | `dataset_phase1_modelisation.csv` | 17 065 | 4,7 Mo | Périmètre de modélisation après l'entonnoir d'extraction complet |
 | `dataset_phase3_final.csv` | 17 065 | 5,5 Mo | Jeu final nettoyé et enrichi (32 colonnes), utilisé pour l'entraînement |
+| `referentiel_etablissements.json` | 245 | 805 Ko | Seconde source : référentiel des établissements, joint par `Code UAI` |
 | `entonnoir_extraction.json` | · | 4 Ko | Effectifs à chaque étape du filtrage |
 | `nettoyage_log.json` | · | 4 Ko | Journal des décisions de nettoyage |
+
+Le référentiel se retélécharge tout seul depuis l'API si le fichier est absent : la
+section 6 de [etape_1_extraction.ipynb](notebooks/etape_1_extraction.ipynb) le récupère au
+besoin, et le notebook reste exécutable hors ligne tant que le fichier est là.
 
 Les colonnes de `dataset_phase3_final.csv` sont documentées dans [DATA_DICTIONARY.md](DATA_DICTIONARY.md).
 

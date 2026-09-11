@@ -48,7 +48,7 @@ amplitude, pas à classer 365 établissements, et le texte le précise.
 
 ## 3. Inventaire
 
-**17 figures, 8 types de graphiques distincts**, pour un seuil d'excellence fixé à 7 par la
+**18 figures, 8 types de graphiques distincts**, pour un seuil d'excellence fixé à 7 par la
 grille. Le notebook vérifie par `assert` que chaque fichier existe, qu'aucune figure
 produite n'a été oubliée du récit, et que les cinq questions business ont chacune la leur.
 
@@ -58,7 +58,7 @@ produite n'a été oubliée du récit, et que les cinq questions business ont ch
 | Cadrage | `fig02` |
 | Q1 à Q5 | `fig04` à `fig09` |
 | Décisions de modélisation | `fig10`, `fig11` |
-| Modélisation et évaluation | `fig12` à `fig16` |
+| Modélisation et évaluation | `fig12` à `fig16`, `fig18` |
 | Vue d'ensemble | `fig17` |
 
 ---
@@ -118,7 +118,7 @@ reconnaissables comme appartenant au même projet :
 
 ## Checklist
 
-- [x] Au moins 7 visualisations produites : **17**, de 8 types distincts
+- [x] Au moins 7 visualisations produites : **18**, de 8 types distincts
 - [x] Chaque question business a sa figure, vérifié par `assert`
 - [x] Une vue d'ensemble existe : `fig17_vue_ensemble.png`
 - [x] Titres clairs et porteurs de message

@@ -1,6 +1,6 @@
 # Récit visuel : de la donnée brute au modèle
 
-Ce document est le fil conducteur des 17 visualisations du projet. Chacune répond à une
+Ce document est le fil conducteur des 18 visualisations du projet. Chacune répond à une
 question posée avant de la tracer, et chaque titre de section énonce **ce que la figure
 montre**, pas ce qu'elle représente. Les figures sont produites par les notebooks des
 étapes 2, 4, 5 et 6 ; aucun chiffre n'est saisi à la main ici.
@@ -15,7 +15,7 @@ caractéristiques ?**
 | 2 | Qu'est-ce qui sépare une formation qui insère d'une autre ? | 4 à 6, 11 |
 | 3 | Deux résultats qui contredisent l'intuition | 7, 9 |
 | 4 | Que faut-il refuser de donner au modèle ? | 8, 10 |
-| 5 | Que vaut le modèle, et où échoue-t-il ? | 12 à 16 |
+| 5 | Que vaut le modèle, et où échoue-t-il ? | 12 à 16, 18 |
 
 ---
 
@@ -30,7 +30,7 @@ La correspondance entre les panneaux (b) et (d) est le point à voir : le facteu
 l'analyse exploratoire avait identifié comme dominant, la vocation du diplôme, est aussi
 celui que le modèle utilise le plus. L'analyse et le modèle racontent la même histoire.
 
-Les seize figures qui suivent développent ces quatre panneaux dans l'ordre du raisonnement.
+Les dix-sept figures qui suivent développent ces quatre panneaux dans l'ordre du raisonnement.
 
 ---
 
@@ -254,6 +254,24 @@ C'est la confirmation de l'hypothèse 4, et surtout la précision qui manque qua
 « 9,58 points d'erreur » : cette moyenne recouvre deux situations très différentes. La
 promotion 2020 reste la plus difficile, avec un biais de surestimation, faute pour le modèle
 de pouvoir représenter un choc conjoncturel.
+
+### 17. Forêt et gradient boosting prédisent presque la même chose
+
+![Duel forêt contre boosting](figures_eda/fig18_duel_foret_boosting.png)
+
+Une fois chacun optimisé sur sa propre grille, les deux familles de modèles arrivent à
+9,44 et 9,24 points de MAE. Le nuage de droite montre pourquoi l'écart importe peu : leurs
+prédictions corrèlent à 0,953 et ne divergent de plus de 10 points que sur 2,4 % des
+formations.
+
+Le panneau de gauche explique cette proximité : ils s'appuient sur les mêmes variables, dans
+le même ordre, avec des intensités différentes. Le boosting tire deux fois plus de
+`est_diplome_professionnalisant`, mais il n'a pas trouvé un signal que la forêt aurait
+manqué.
+
+Cette figure sert un argument de méthode plus qu'un choix de modèle : quand deux approches
+très différentes convergent sur les mêmes variables et les mêmes prédictions, c'est que le
+signal est dans les données, pas dans l'algorithme.
 
 ---
 

@@ -182,9 +182,9 @@ Ne remettez pas la documentation à la fin. Le notebook doit rester exécutable 
 |----------|--------|---|---------|
 | Dataset final nettoyé | .csv | `csv/dataset_phase3_final.csv`, 17 065 × 32 | ☑ |
 | Data Dictionary | .md | [DATA_DICTIONARY.md](DATA_DICTIONARY.md), 32 colonnes | ☑ |
-| Notebooks documentés et exécutables | .ipynb | [notebooks/](notebooks/), 7 notebooks, 0 erreur | ☑ |
+| Notebooks documentés et exécutables | .ipynb | [notebooks/](notebooks/), 8 notebooks, 0 erreur | ☑ |
 | **Modèle entraîné (pipeline complète)** | .joblib | `modeles/modele_final_random_forest.joblib`, fiche dans [MODEL_CARD.md](MODEL_CARD.md), inférence dans [modeles/inference.py](modeles/inference.py) | ☑ |
-| Visualisations (7 min.) | .png | [figures_eda/](figures_eda/), 17 figures, récit dans [Rapport_Visualisation.md](Rapport_Visualisation.md) | ☑ |
+| Visualisations (7 min.) | .png | [figures_eda/](figures_eda/), 18 figures, récit dans [Rapport_Visualisation.md](Rapport_Visualisation.md) | ☑ |
 | Présentation / rapport | .pdf ou .pptx | hors dépôt | ☐ |
 
 ---

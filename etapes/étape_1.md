@@ -280,3 +280,17 @@ en 3.2, et la raison d'être des deux jeux produits.
 ## 9. Prochaine étape
 
 Phase 2, EDA diagnostique sur `csv/dataset_phase1_analytique.csv`.
+
+---
+
+## Utilisation de l'IA sur cette étape
+
+> **Échanges reconstitués a posteriori.** L'historique de l'outil n'a pas été conservé pour
+> cette étape : la formulation des prompts est approximative. Ce qui est vérifiable, c'est
+> la dernière colonne, visible dans le notebook.
+
+| Prompt utilisé | Ce que l'IA a produit | Vérification effectuée |
+|---|---|---|
+| « Comment lire un CSV de 773 Mo séparé par des points-virgules sans saturer la mémoire ? » | Lecture par blocs avec `chunksize`, `dtype` et `usecols` | Retenu, puis complété par `utf-8-sig` après constat du BOM sur la première colonne, et par `na_values=["nd", "ns"]` après inspection des valeurs |
+| « Pourquoi ma colonne cible ne contient-elle aucune valeur ? » | Hypothèses : mauvais séparateur, mauvais encodage, codes de non-diffusion | Toutes écartées par un diagnostic de remplissage sur tout le fichier : la colonne est réellement vide sur 1 036 781 lignes, comme huit autres. Cible révisée |
+| « Écris le code pour interroger l'API Explore v2.1 et joindre le JSON au CSV par code UAI » | Requête d'export et `merge` | Jointure passée en `left` avec un `assert` sur le nombre de lignes, pour qu'aucune observation ne disparaisse. Couverture mesurée (79,7 %) plutôt que supposée |

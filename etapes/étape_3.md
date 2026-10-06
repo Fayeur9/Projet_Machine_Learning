@@ -220,3 +220,17 @@ l'intérieur d'un `Pipeline`**, réajusté sur les seules données d'entraîneme
 - [x] Dictionnaire de données généré depuis le jeu réel
 - [x] Jeu final exporté
 - [x] Découpage apprentissage / test unique et reproductible
+
+---
+
+## Utilisation de l'IA sur cette étape
+
+> **Échanges reconstitués a posteriori.** L'historique de l'outil n'a pas été conservé pour
+> cette étape : la formulation des prompts est approximative. Ce qui est vérifiable, c'est
+> la dernière colonne, visible dans le notebook.
+
+| Prompt utilisé | Ce que l'IA a produit | Vérification effectuée |
+|---|---|---|
+| « Propose des variables pour prédire le taux d'emploi d'une formation » | Liste de variables, dont des moyennes de la cible par groupe | Les agrégats de la cible sont écartés, car ce serait une fuite hors pipeline. Dix variables conservées, chacune rattachée à une hypothèse de l'étape 2 |
+| « Comment prouver qu'une variable créée ne fuit pas la cible ? » | Vérifier qu'aucune formule n'utilise y | Transformé en test exécutable (permutation de la cible puis recalcul), complété par la sensibilité au découpage, qui a révélé le cas `part_sortants_etablissement` |
+| « Génère un dictionnaire de données pour ce jeu » | Tableau des colonnes à remplir | Généré depuis le jeu réel, avec un `assert` qui échoue si une colonne n'est pas décrite |

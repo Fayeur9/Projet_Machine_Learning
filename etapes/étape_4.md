@@ -173,3 +173,17 @@ Figure : `figures_eda/fig12_comparaison_modeles.png`
 - [x] Apport de la seconde source mesuré, et le résultat négatif reporté
 - [x] Choix argumenté, et coût du choix assumé
 - [x] **Le jeu de test n'a pas été ouvert**
+
+---
+
+## Utilisation de l'IA sur cette étape
+
+> **Échanges reconstitués a posteriori.** L'historique de l'outil n'a pas été conservé pour
+> cette étape : la formulation des prompts est approximative. Ce qui est vérifiable, c'est
+> la dernière colonne, visible dans le notebook.
+
+| Prompt utilisé | Ce que l'IA a produit | Vérification effectuée |
+|---|---|---|
+| « Quels modèles comparer pour une régression tabulaire de 17 000 lignes ? » | Linéaire, arbre, forêt, gradient boosting | Retenus, complétés par Ridge et par un `DummyRegressor` évalué dans les mêmes plis |
+| « ^2$ de 0,90 en entraînement et 0,55 en validation : est-ce grave ? » | Explication générale du surapprentissage | Traduit en points de MAE et en nombre de formations ratées de plus de 15 points |
+| « Forêt à 9,495, boosting à 9,518 : lequel choisir ? » | Prendre le meilleur score | Rejeté : l'écart est vingt fois plus petit que la variabilité entre plis. Choix argumenté autrement, coût écrit, puis réexaminé à l'étape 5b |

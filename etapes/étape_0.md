@@ -168,3 +168,17 @@ l'étape 4, les variables du référentiel ne gagnent que 0,020 point de MAE, so
 moins que le bruit de la validation croisée. Elles ne sont pas retenues. La seconde source
 reste utile à l'analyse et satisfait le critère des deux formats ; elle n'améliore pas le
 modèle, et c'était mesurable.
+
+---
+
+## Utilisation de l'IA sur cette étape
+
+> **Échanges reconstitués a posteriori.** L'historique de l'outil n'a pas été conservé pour
+> cette étape : la formulation des prompts est approximative. Ce qui est vérifiable, c'est
+> la dernière colonne, visible dans le notebook.
+
+| Prompt utilisé | Ce que l'IA a produit | Vérification effectuée |
+|---|---|---|
+| « Voici les colonnes du jeu INSERSUP : propose cinq questions business SMART et une question prédictive » | Cinq questions et une cible, le taux d'emploi à 6 mois | Questions conservées et rattachées aux effectifs réels (11 types de diplôme, 329 établissements). La cible proposée s'est révélée vide à l'étape 1, d'où la révision |
+| « Classification ou régression pour prédire un taux d'emploi ? Quelle métrique ? » | Régression, avec MAE, RMSE et ^2$ | MAE retenue comme métrique principale parce qu'elle se lit en points de taux. Répartition de la cible mesurée avant de valider |
+| « Trouve une seconde source ouverte joignable à INSERSUP, dans un autre format » | Référentiel des établissements, données régionales d'emploi | Référentiel retenu : joignable par le code UAI et disponible en JSON. Le marché local de l'emploi reste une source optionnelle |

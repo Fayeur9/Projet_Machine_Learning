@@ -351,3 +351,18 @@ Onze figures dans `Projet/figures_eda/` :
 - [x] Lien features / cible mesuré (Pearson et eta²)
 - [x] Hypothèses formulées sur ce que le modèle devrait apprendre
 - [x] 11 figures produites et enregistrées
+
+---
+
+## Utilisation de l'IA sur cette étape
+
+> **Échanges reconstitués a posteriori.** L'historique de l'outil n'a pas été conservé pour
+> cette étape : la formulation des prompts est approximative. Ce qui est vérifiable, c'est
+> la dernière colonne, visible dans le notebook.
+
+| Prompt utilisé | Ce que l'IA a produit | Vérification effectuée |
+|---|---|---|
+| « Quels contrôles faire pour chacune des cinq dimensions de qualité ? » | Liste générique : valeurs manquantes, doublons, valeurs atypiques | Complétée par le contrôle le plus discriminant du jeu, absent de la liste : recalculer chaque taux depuis les effectifs publiés, qui révèle 11 anomalies |
+| « Comment trouver une clé primaire quand la colonne `id` est vide ? » | Combiner les colonnes descriptives | La clé sur libellés laissait 144 conflits. Cinq clés candidates testées : seule UAI × SISE × Promotion est unique |
+| « Faut-il supprimer les valeurs atypiques de la cible ? » | Filtrage par écart interquartile | Rejeté : la borne haute dépasse 100, et les 31 cas bas sont réels sur de petits effectifs. Tous conservés |
+| « Les femmes ont un taux d'emploi plus faible que les hommes : comment l'interpréter ? » | Mise en garde sur les effets de composition | Vérifiée par une comparaison appariée sur 4 026 formations : l'écart change de signe |

@@ -320,3 +320,17 @@ sur les 3 413 lignes de test.
 - [x] Pipeline sauvegardée en `.joblib` avec son référentiel
 - [x] Rechargement vérifié par un contrôle de non-régression
 - [x] Démonstration de prédiction sur une donnée brute, modalité inconnue comprise
+
+---
+
+## Utilisation de l'IA sur cette étape
+
+> **Échanges reconstitués a posteriori.** L'historique de l'outil n'a pas été conservé pour
+> cette étape : la formulation des prompts est approximative. Ce qui est vérifiable, c'est
+> la dernière colonne, visible dans le notebook.
+
+| Prompt utilisé | Ce que l'IA a produit | Vérification effectuée |
+|---|---|---|
+| « Quelle grille d'hyperparamètres pour une forêt aléatoire ? » | Grille large sur la profondeur et le nombre d'arbres | Réduite à 16 configurations ciblées, et choix par la règle à un écart-type plutôt que sur le meilleur score brut |
+| « Comment interpréter l'importance des variables d'une forêt ? » | `feature_importances_` | Complétée par l'importance par permutation, l'impureté favorisant les variables à nombreuses modalités. Les deux sont confrontées aux hypothèses de l'EDA |
+| « Mon test contient des formations déjà vues à l'entraînement : est-ce une fuite ? » | Suggestion d'un découpage par groupe | Mesuré plutôt que supposé : 90 % de recouvrement, surcoût de 1,89 point. Validation temporelle ajoutée |

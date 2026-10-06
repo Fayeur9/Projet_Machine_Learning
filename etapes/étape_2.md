@@ -3,7 +3,7 @@
 ## Objectif
 
 Deux temps distincts, réunis dans un même notebook :
-[`Projet/notebooks/etape_2_eda.ipynb`](../notebooks/etape_2_eda.ipynb).
+[`etape_2_eda.ipynb`](../notebooks/etape_2_eda.ipynb).
 
 1. **Diagnostic qualité** : analyser les cinq dimensions attendues, puis prioriser les
    problèmes trouvés dans un rapport unique servant de cahier des charges à l'étape 3.
@@ -322,7 +322,7 @@ Part de la variance de la cible expliquée par chaque variable catégorielle (et
 
 ## Figures produites
 
-Onze figures dans `Projet/figures_eda/` :
+Onze figures dans `figures_eda/` :
 
 | Fichier | Contenu |
 |---|---|
@@ -356,13 +356,13 @@ Onze figures dans `Projet/figures_eda/` :
 
 ## Utilisation de l'IA sur cette étape
 
-> **Échanges reconstitués a posteriori.** L'historique de l'outil n'a pas été conservé pour
-> cette étape : la formulation des prompts est approximative. Ce qui est vérifiable, c'est
-> la dernière colonne, visible dans le notebook.
-
 | Prompt utilisé | Ce que l'IA a produit | Vérification effectuée |
 |---|---|---|
-| « Quels contrôles faire pour chacune des cinq dimensions de qualité ? » | Liste générique : valeurs manquantes, doublons, valeurs atypiques | Complétée par le contrôle le plus discriminant du jeu, absent de la liste : recalculer chaque taux depuis les effectifs publiés, qui révèle 11 anomalies |
-| « Comment trouver une clé primaire quand la colonne `id` est vide ? » | Combiner les colonnes descriptives | La clé sur libellés laissait 144 conflits. Cinq clés candidates testées : seule UAI × SISE × Promotion est unique |
-| « Faut-il supprimer les valeurs atypiques de la cible ? » | Filtrage par écart interquartile | Rejeté : la borne haute dépasse 100, et les 31 cas bas sont réels sur de petits effectifs. Tous conservés |
-| « Les femmes ont un taux d'emploi plus faible que les hommes : comment l'interpréter ? » | Mise en garde sur les effets de composition | Vérifiée par une comparaison appariée sur 4 026 formations : l'écart change de signe |
+| « Comment tester quelle combinaison de colonnes forme une clé primaire ? » | Boucle de test sur clés candidates avec `duplicated` | Chaque clé rejouée à la main, et la nécessité de chaque colonne vérifiée en la retirant une à une |
+| « Mes moyennes par genre disent l'inverse de mon intuition, comment vérifier ? » | Piste de l'effet de composition, comparaison appariée | Appariement recodé sur la clé formation × promotion, écart recalculé formation par formation |
+| « Quelle mesure de lien entre une variable catégorielle et une cible continue ? » | Rapport de corrélation eta² | Formule revérifiée : variance des moyennes de groupe rapportée à la variance totale |
+| « Écris-moi le code d'un boxplot horizontal matplotlib » | Code utilisant `vert=False` | Corrigé : `vert` est retiré de matplotlib 3.11, remplacé par `orientation='horizontal'` |
+
+L'erreur la plus utile a été la première comparaison par genre : le code produit était
+correct, mais la question était mal posée. C'est l'appariement, pas le code, qui a changé
+la conclusion.

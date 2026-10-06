@@ -64,7 +64,7 @@ l'emploi non salarié, mesuré séparément par
 
 ### Source 1 - Principale (acquise)
 - Nom : INSERSUP, insertion professionnelle des diplômés de l'enseignement supérieur
-- Fichier : `Projet/csv/dataset.csv`
+- Fichier : `csv/dataset.csv`
 - Format : CSV (séparateur `;`, encodage UTF-8 avec BOM)
 - Volume : 773 Mo, 1 036 781 lignes × 101 colonnes
 - Origine : Données publiques du ministère de l'Enseignement supérieur
@@ -75,7 +75,7 @@ l'emploi non salarié, mesuré séparément par
   supérieur, `fr-esr-principaux-etablissements-enseignement-superieur`.
 - Format : **JSON**, via l'API REST Explore v2.1 du portail. Second format obtenu sans
   changer de sujet ni de producteur.
-- Fichier : `Projet/csv/referentiel_etablissements.json`, 805 Ko, 245 établissements ×
+- Fichier : `csv/referentiel_etablissements.json`, 805 Ko, 245 établissements ×
   100 champs, licence Ouverte Etalab.
 - Apport : secteur public ou privé, statut juridique, département et effectif d'inscrits
   de l'établissement. Aucune de ces informations n'existe dans INSERSUP.
@@ -150,7 +150,7 @@ l'emploi non salarié, mesuré séparément par
 4. **Apport nul de la seconde source au modèle** : le référentiel des établissements
    n'apparie que 79,7 % des lignes, et les absents ne sont pas un échantillon au hasard,
    ce sont les plus petits et les plus souvent privés. Testé à l'étape 4, il ne gagne que
-   0,020 point de MAE, six fois moins que le bruit entre plis de validation. Ses variables
+   0,014 point de MAE, quinze fois moins que le bruit entre plis de validation. Ses variables
    servent donc à l'analyse, pas au modèle. Le résultat est reporté plutôt que masqué.
 
 ---
@@ -164,7 +164,7 @@ aboutit à un problème de régression bien posé. Tous les critères de validat
 sont désormais conformes.
 
 La décision de modélisation laissée ouverte par l'étape 1 est tranchée : mesurées à
-l'étape 4, les variables du référentiel ne gagnent que 0,020 point de MAE, soit six fois
+l'étape 4, les variables du référentiel ne gagnent que 0,014 point de MAE, soit quinze fois
 moins que le bruit de la validation croisée. Elles ne sont pas retenues. La seconde source
 reste utile à l'analyse et satisfait le critère des deux formats ; elle n'améliore pas le
 modèle, et c'était mesurable.

@@ -30,7 +30,7 @@ journaux :
 | `dataset.csv` | 1 036 781 | 738 Mo | Export brut INSERSUP (millésime 2026_S1), tel que téléchargé |
 | `dataset_phase1_analytique.csv` | 438 696 | 148 Mo | Après filtre « cible renseignée » : base des analyses par genre et par ventilation |
 | `dataset_phase1_modelisation.csv` | 17 065 | 4,7 Mo | Périmètre de modélisation après l'entonnoir d'extraction complet |
-| `dataset_phase3_final.csv` | 17 065 | 5,5 Mo | Jeu final nettoyé et enrichi (32 colonnes), utilisé pour l'entraînement |
+| `dataset_phase3_final.csv` | 17 065 | 5,1 Mo | Jeu final nettoyé et enrichi (28 colonnes), utilisé pour l'entraînement |
 | `referentiel_etablissements.json` | 245 | 805 Ko | Seconde source : référentiel des établissements, joint par `Code UAI` |
 | `entonnoir_extraction.json` | · | 4 Ko | Effectifs à chaque étape du filtrage |
 | `nettoyage_log.json` | · | 4 Ko | Journal des décisions de nettoyage |
@@ -180,12 +180,35 @@ Ne remettez pas la documentation à la fin. Le notebook doit rester exécutable 
 
 | Livrable | Format | Fichier produit | Vérifié |
 |----------|--------|---|---------|
-| Dataset final nettoyé | .csv | `csv/dataset_phase3_final.csv`, 17 065 × 32 | ☑ |
-| Data Dictionary | .md | [DATA_DICTIONARY.md](DATA_DICTIONARY.md), 32 colonnes | ☑ |
-| Notebooks documentés et exécutables | .ipynb | [notebooks/](notebooks/), 8 notebooks, 0 erreur | ☑ |
-| **Modèle entraîné (pipeline complète)** | .joblib | `modeles/modele_final_random_forest.joblib`, fiche dans [MODEL_CARD.md](MODEL_CARD.md), inférence dans [modeles/inference.py](modeles/inference.py) | ☑ |
+| Dataset final nettoyé | .csv | `csv/dataset_phase3_final.csv`, 17 065 × 28 | ☑ |
+| Data Dictionary | .md | [DATA_DICTIONARY.md](DATA_DICTIONARY.md), 28 colonnes + 3 variables calculées dans la pipeline | ☑ |
+| Notebooks documentés et exécutables | .ipynb | [notebooks/](notebooks/), 9 notebooks, 0 erreur | ☑ |
+| **Modèle entraîné (pipeline complète)** | .joblib | `modeles/modele_final.joblib` (gradient boosting), protocole dans [modeles/protocole.py](modeles/protocole.py), fiche dans [MODEL_CARD.md](MODEL_CARD.md), inférence dans [modeles/inference.py](modeles/inference.py) | ☑ |
 | Visualisations (7 min.) | .png | [figures_eda/](figures_eda/), 18 figures, récit dans [Rapport_Visualisation.md](Rapport_Visualisation.md) | ☑ |
 | Présentation / rapport | .pdf ou .pptx | hors dépôt | ☐ |
+
+### Où trouver chaque phase de la grille
+
+Les rapports d'étape de [etapes/](etapes/) ne suivent pas exactement la numérotation des
+phases : certaines étapes en couvrent deux, et la modélisation en occupe plusieurs.
+
+| Phase de la grille | Points | Rapport d'étape | Notebook |
+|---|---:|---|---|
+| 0. Cadrage | 6 | [étape 0](etapes/étape_0.md) | · |
+| 1. Extraction | 4 | [étape 1](etapes/étape_1.md) | `etape_1_extraction` |
+| 2. Diagnostic qualité | 8 | [étape 2](etapes/étape_2.md), partie A | `etape_2_eda` |
+| 3. Nettoyage | 12 | [étape 3](etapes/étape_3.md), section 1 | `etape_3_preparation` |
+| 4. Transformation | 8 | [étape 3](etapes/étape_3.md), sections 2 à 5 | `etape_3_preparation` |
+| 5. EDA analytique | 12 | [étape 2](etapes/étape_2.md), partie B | `etape_2_eda` |
+| 6. Visualisation | 8 | [étape 6](etapes/étape_6.md), [récit visuel](Rapport_Visualisation.md) | `etape_6_visualisation` |
+| 7. Modélisation | 25 | [étapes 4](etapes/étape_4.md), [5](etapes/étape_5.md), [5b](etapes/étape_5b.md), [5c](etapes/étape_5c.md), [7](etapes/étape_7.md) | `etape_4` à `etape_7` |
+| 8. Documentation | 5 | [étape 8](etapes/étape_8.md) | toute la chaîne |
+| 9. Soutenance | 7 | [étape 9](etapes/étape_9.md) | · |
+
+**Révision du protocole.** Après relecture par la formatrice, le découpage et la validation
+croisée ont été groupés par formation, les agrégats déplacés dans la pipeline et le jeu de
+test réservé à une seule mesure. Ce qui a changé, et pourquoi le score a baissé :
+[étape 10](etapes/étape_10_revision.md).
 
 ---
 

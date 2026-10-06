@@ -2,46 +2,47 @@
 
 ## Objectif
 
-L'étape 4 n'avait pas vraiment départagé les deux premiers modèles : 9,495 contre 9,518 de
-MAE, pour un écart-type entre plis de 0,147. **L'écart était six fois plus petit que le
-bruit de mesure.** La forêt avait été retenue sur sa stabilité, ce qui se défend, mais
-aucun des deux n'était alors optimisé : c'était un départage par défaut.
-
-Cette étape optimise chacun séparément, mesure ce qui les sépare réellement, et teste si
-les combiner vaut mieux que choisir.
+L'étape 4 a laissé deux candidats : le gradient boosting devant la forêt aléatoire, 10,02
+contre 10,28 de MAE en validation groupée, mais tous deux réglés par défaut. L'étape 5 a
+optimisé la forêt sans la faire passer sous 10,1. Cette étape **choisit le modèle livré** :
+elle optimise chacun avec sa propre grille, mesure ce qui les sépare, teste s'il vaut mieux
+les combiner, et applique une règle de choix fixée avant le calcul.
 
 Notebook : [`etape_5b_duel_foret_boosting.ipynb`](../notebooks/etape_5b_duel_foret_boosting.ipynb)
 
-**Règle du jeu de test** : tout se joue en validation croisée sur les seules 13 652
-formations d'apprentissage. Le jeu de test n'est pas ouvert. S'il l'était pour départager,
-il cesserait d'être un jeu de test.
+**Règle du jeu de test** : tout se joue en validation croisée groupée sur les seules
+13 718 lignes d'apprentissage. Le jeu de test n'est pas construit : le modèle est choisi
+avant qu'il soit ouvert, à l'étape 5c.
+
+> **Révision du protocole** (voir [étape 10](étape_10_revision.md)). La première version de
+> ce duel, en plis aléatoires, donnait déjà l'avantage au boosting (9,24 contre 9,44), mais
+> conservait la forêt parce qu'elle seule avait un score de test. Avec un découpage groupé
+> et un test neuf, cet argument disparaît : le vainqueur du duel est le modèle livré.
 
 ---
 
 ## 1. Dimensionner avant d'explorer
 
+Trois plis groupés, pour une courbe de tendance.
+
 | Famille | Paramètre | RMSE | Écart train − validation |
 |---|---|---:|---:|
-| Forêt | 50 arbres | 12,654 | 0,363 |
-| Forêt | 100 arbres | 12,591 | 0,362 |
-| Forêt | 200 arbres | 12,568 | 0,361 |
-| Forêt | 400 arbres | 12,554 | 0,361 |
-| Boosting | 100 itérations | 12,422 | 0,122 |
-| Boosting | 200 itérations | 12,215 | 0,187 |
-| Boosting | 400 itérations | 12,172 | 0,271 |
-| Boosting | 800 itérations | 12,247 | **0,359** |
+| Forêt | 50 arbres | 13,638 | 0,438 |
+| Forêt | 100 arbres | 13,598 | 0,437 |
+| Forêt | 200 arbres | 13,569 | 0,436 |
+| Forêt | 400 arbres | 13,546 | 0,435 |
+| Boosting | 100 itérations | 13,132 | 0,179 |
+| Boosting | 200 itérations | 13,153 | 0,257 |
+| Boosting | 400 itérations | 13,335 | 0,353 |
+| Boosting | 800 itérations | 13,589 | **0,449** |
 
-Les deux familles ne se comportent pas du tout pareil, et c'est ce qui justifie de leur
-donner des grilles différentes.
+**La forêt plafonne.** Elle gagne l'essentiel avant 200 arbres, et son écart entraînement /
+validation ne bouge pas : ajouter des arbres ne la fait pas surapprendre, cela stabilise
+seulement la moyenne. Le nombre d'arbres est un budget de calcul, pas un levier.
 
-**La forêt plafonne.** Elle gagne l'essentiel entre 50 et 200 arbres, puis 0,014 point de
-RMSE en doublant encore. Son écart entraînement / validation ne bouge pas d'un millième :
-ajouter des arbres à une forêt ne la fait pas surapprendre, cela ne fait que stabiliser la
-moyenne. Le nombre d'arbres n'est donc pas un levier, c'est un budget de calcul.
-
-**Le boosting, lui, finit par surapprendre.** Son écart triple de 100 à 800 itérations, et
-sa RMSE **remonte** après 400 : les dernières itérations ne corrigent plus des erreurs, elles
-corrigent du bruit. Ses vrais leviers sont le taux d'apprentissage et la taille des arbres.
+**Le boosting surapprend vite.** Avec son pas par défaut, sa RMSE remonte dès 200
+itérations et son écart entraînement / validation est multiplié par 2,5 de 100 à 800. Ses
+vrais leviers sont le pas d'apprentissage et la taille des arbres.
 
 ---
 
@@ -58,84 +59,84 @@ corrigent du bruit. Ses vrais leviers sont le taux d'apprentissage et la taille 
 | `learning_rate` | 0.03, 0.06, 0.1 |
 | `max_leaf_nodes` | 15, 31, 63 |
 | `min_samples_leaf` | 10, 20 |
-| `max_iter` | 400, fixé d'après la courbe ci-dessus |
+| `max_iter` | 400 |
 
-Même sélection pour les deux, celle de l'étape 5 : meilleure RMSE, puis **règle à un
-écart-type**, puis la configuration la plus simple parmi les équivalentes.
+Même sélection pour les deux : meilleure RMSE, puis **règle à un écart-type**, puis la
+configuration la plus simple parmi les équivalentes.
 
 | | Meilleure de la grille | Seuil à 1 écart-type | Équivalentes | Retenue |
 |---|---:|---:|---:|---|
-| Forêt | 12,168 (± 0,191) | 12,359 | 7 sur 16 | `max_features=0.3`, `min_samples_leaf=2` |
-| Boosting | 11,848 (± 0,169) | 12,017 | 10 sur 18 | `learning_rate=0.1`, `max_leaf_nodes=15`, `min_samples_leaf=10` |
+| Forêt | 13,175 (± 0,301) | 13,476 | 15 sur 16 | `max_features=0.3`, `min_samples_leaf=10` |
+| Boosting | 12,950 (± 0,338) | 13,288 | 16 sur 18 | `learning_rate=0.03`, `max_leaf_nodes=15`, `min_samples_leaf=20` |
+
+En validation groupée, la variabilité entre plis est plus forte que les écarts entre
+réglages : presque toutes les configurations sont équivalentes, et la règle retient la plus
+simple de chaque famille.
 
 ---
 
-## 3. Le résultat : deux modèles très proches, un léger avantage au boosting
+## 3. La règle de choix, fixée avant de lire les résultats
+
+> Le modèle livré est celui des deux dont la MAE hors pli est la plus faible. La moyenne
+> des deux n'est retenue que si elle bat le meilleur des deux de plus d'un écart-type entre
+> plis.
+
+## 4. Le résultat : le boosting gagne, partout
+
+Prédictions hors pli, plis groupés : chaque ligne est prédite par un modèle qui n'a vu
+aucune promotion de sa formation.
 
 | Modèle | MAE | RMSE | R² | à ±5 pts | ratées de +15 pts |
 |---|---:|---:|---:|---:|---:|
-| Forêt optimisée | 9,439 | 12,278 | 0,557 | 35,2 % | 20,6 % |
-| **Boosting optimisé** | **9,241** | **12,005** | **0,577** | 35,3 % | 19,4 % |
-| Moyenne des deux | 9,199 | 11,963 | 0,580 | 35,8 % | 19,5 % |
+| Forêt optimisée | 10,261 | 13,346 | 0,481 | 32,3 % | 23,4 % |
+| **Boosting optimisé** | **10,084** | **13,097** | **0,500** | 32,6 % | 22,8 % |
+| Moyenne des deux | 10,085 | 13,119 | 0,499 | 32,4 % | 22,7 % |
 
-**L'avantage du boosting est faible mais systématique.** 0,198 point de MAE, soit environ
-1,3 fois l'écart-type entre plis : pris isolément, l'écart serait discutable. Ce qui lui
-donne du poids, c'est sa régularité : sur 14 découpages par taille de formation, domaine et
-promotion, le boosting en remporte **13**. La forêt n'en garde qu'un, Lettres langues et
-arts, pour 0,03 point. Un écart faible mais présent partout est plus solide qu'un écart
-global isolé.
+**L'avantage du boosting est modeste mais systématique.** 0,178 point de MAE, soit 1,2
+écart-type entre plis : pris isolément, l'écart serait discutable. Ce qui lui donne du
+poids, c'est sa régularité : le boosting gagne **les cinq plis**, et **13 des 14
+découpages** par taille de formation, domaine et promotion. La forêt ne garde que Lettres,
+langues et arts, pour 0,03 point.
 
-**L'optimisation ne profite pas également aux deux.** La forêt gagne 0,056 point entre sa
-version de l'étape 4 et sa version optimisée ; le boosting en gagne 0,277, cinq fois plus.
-La courbe de convergence l'annonçait : la forêt était déjà proche de son plafond avec ses
-réglages par défaut, le boosting était mal réglé. **Comparer deux modèles non optimisés ne
-dit rien de leur potentiel** : c'est la leçon principale de cette étape, et elle vaut
-au-delà de ce projet.
+**Les deux modèles se ressemblent énormément.** Leurs prédictions corrèlent à **0,966**,
+pour un écart absolu moyen de **2,5 points** ; elles ne divergent de plus de 10 points que
+sur **0,9 %** des lignes ; leurs rangs d'importance corrèlent à **0,897**.
 
-**Les deux modèles se ressemblent énormément**, et c'est le résultat principal de cette
-étape. Quatre mesures indépendantes concordent : leurs prédictions corrèlent à **0,953**
-pour un écart absolu moyen de **3,16 points**, elles ne divergent de plus de 10 points que
-sur **2,4 %** des formations, leurs rangs d'importance de variables corrèlent à **0,905**, et
-l'écart médian entre eux sur les 14 découpages est de **0,15 point de MAE** quand l'erreur
-elle-même vaut 9,4. Sur une formation donnée, il est rare que le choix du modèle change la
-réponse de plus d'un ou deux points.
+**Les combiner n'apporte rien.** La moyenne des deux fait exactement le score du boosting
+seul (10,085 contre 10,084). Deux modèles qui se trompent aux mêmes endroits ne se
+corrigent pas l'un l'autre.
 
-**Les combiner n'apporte rien.** La moyenne des deux gagne 0,042 point sur le boosting seul,
-très en dessous du bruit. C'est cohérent : leurs prédictions corrèlent à 0,953, leur écart
-absolu moyen est de 3,16 points, et elles ne divergent de plus de 10 points que sur 2,4 %
-des formations. Deux modèles qui se trompent aux mêmes endroits ne se corrigent pas l'un
-l'autre. Doubler le temps d'entraînement et la taille du livrable pour 0,042 point ne se
-justifie pas.
-
-**Ils exploitent le même signal, plus ou moins fort.** La corrélation des rangs d'importance
-est de 0,905. Le boosting s'appuie deux fois plus sur `est_diplome_professionnalisant`
-(4,04 contre 2,04 points de RMSE) et tire davantage des variables d'établissement. Rien
-n'indique qu'il ait trouvé un signal que la forêt aurait manqué : il exploite mieux le même.
+**Ils exploitent le même signal, plus ou moins fort.** Le boosting s'appuie près de deux
+fois plus sur `est_diplome_professionnalisant` (3,96 contre 2,19 points de RMSE) ; la forêt
+pèse davantage sur le type de diplôme, qui porte en partie la même information.
 
 ![Duel](../figures_eda/fig18_duel_foret_boosting.png)
 
 ---
 
-## 4. Décision : la forêt aléatoire est conservée
+## 5. Décision : le gradient boosting est retenu
 
-L'écart mesuré penche pour le boosting, mais il est ténu : 0,198 point de MAE, soit 2 % de
-l'erreur. La forêt reste néanmoins le modèle livré, pour trois raisons.
+La règle de la section 3 désigne le boosting, et la moyenne des deux ne la bat pas. Le
+choix est enregistré dans `modeles/choix_modele.json`, **avant toute ouverture du jeu de
+test** :
 
-**1. Le seul score mesuré sur le jeu de test est celui de la forêt : 9,579 points de MAE.**
-Celui du boosting n'existe qu'en validation croisée. Échanger un résultat mesuré contre une
-estimation, pour 2 %, c'est troquer une certitude contre une promesse.
+```json
+{"modele": "Gradient boosting", "classe": "HistGradientBoostingRegressor",
+ "parametres": {"max_iter": 400, "early_stopping": false, "learning_rate": 0.03,
+                "max_leaf_nodes": 15, "min_samples_leaf": 20}}
+```
 
-**2. Le jeu de test n'a été ouvert qu'une fois.** Le rouvrir pour départager rendrait le
-score final légèrement optimiste et ferait perdre une garantie méthodologique qui vaut plus
-que 0,2 point de MAE. C'est aussi un critère explicite de la grille d'évaluation.
+### Ce que l'optimisation a apporté, et ce qu'elle n'a pas apporté
 
-**3. Le gain serait invisible à l'usage.** L'erreur passerait de 9,58 à environ 9,4 points
-sur une cible qui varie de 0 à 100. Aucun utilisateur ne lirait la différence, alors que
-tous liraient l'incohérence d'un protocole abandonné en cours de route.
+Elle n'a pas fait baisser l'erreur. La forêt passe de 10,283 (étape 4) à 10,261, le
+boosting de 10,017 avec ses réglages par défaut à 10,084 avec la configuration retenue. Ces
+écarts sont tous inférieurs à l'écart-type entre plis : la règle à un écart-type a retenu
+la configuration la plus simple, pas la plus flatteuse en apparence.
 
-**Ce que ce choix coûte**, et il faut l'assumer : environ 0,2 point de MAE, et le fait que
-le modèle livré n'est probablement pas le meilleur atteignable sur ces données. C'est écrit
-plutôt que masqué : un choix documenté se défend, un choix caché se découvre.
+Ce qu'elle a apporté, c'est la **garantie que le classement tient** : le boosting devançait
+la forêt réglée par défaut, il devance aussi la forêt optimisée, et sur tous les plis.
+Comparer deux modèles non optimisés ne dit rien de leur potentiel ; ici, l'optimisation
+confirme le classement au lieu de l'inverser.
 
 ---
 
@@ -144,13 +145,13 @@ plutôt que masqué : un choix documenté se défend, un choix caché se découv
 - [x] Chaque famille optimisée avec sa propre grille, sur ses vrais leviers
 - [x] Nombre d'arbres et d'itérations dimensionnés avant l'exploration
 - [x] Même protocole de sélection pour les deux, règle à un écart-type comprise
-- [x] Comparaison sur les mêmes plis, avec la même pipeline
+- [x] Comparaison sur les mêmes plis groupés, avec la même pipeline
 - [x] Écart mesuré contre le bruit entre plis, pas commenté en valeur absolue
-- [x] Analyse par groupe : qui gagne où, et sur combien de formations
+- [x] Analyse par groupe : qui gagne où, et sur combien de lignes
 - [x] Piste de l'ensemble testée et rejetée sur preuve, pas par principe
-- [x] Importances comparées entre les deux familles
-- [x] Jeu de test non ouvert
-- [x] Décision tranchée et argumentée, avec son coût assumé
+- [x] Importances comparées entre les deux familles, sur un sous-découpage groupé
+- [x] Règle de choix fixée avant le calcul, choix enregistré avant l'ouverture du test
+- [x] Jeu de test non construit
 
 ---
 
@@ -159,8 +160,11 @@ plutôt que masqué : un choix documenté se défend, un choix caché se découv
 | Prompt utilisé | Ce que l'IA a produit | Vérification effectuée |
 |---|---|---|
 | « Quels hyperparamètres comptent vraiment pour une forêt, pour un boosting ? » | `max_features` et `min_samples_leaf` d'un côté, `learning_rate` et `max_leaf_nodes` de l'autre | Vérifié par la courbe de convergence avant de bâtir les grilles : le nombre d'arbres ne discrimine effectivement plus au-delà de 200 |
-| « Faut-il combiner deux modèles proches ? » | Réponse générale favorable au moyennage | Testée plutôt que crue : le gain est de 0,042 point, dans le bruit, parce que les deux modèles corrèlent à 0,953. La proposition ne tenait pas ici |
-| « Comment savoir si un écart de MAE est significatif ? » | Comparaison à l'écart-type entre plis | Complétée par une analyse en 14 groupes : c'est la régularité de l'avantage, pas sa taille, qui a emporté la conclusion |
+| « Faut-il combiner deux modèles proches ? » | Réponse générale favorable au moyennage | Testée plutôt que crue : la moyenne fait exactement le score du boosting seul, parce que les deux modèles corrèlent à 0,966. La proposition ne tenait pas ici |
+| « Comment savoir si un écart de MAE est significatif ? » | Comparaison à l'écart-type entre plis | Complétée par le décompte des plis gagnés et une analyse en 14 groupes : c'est la régularité de l'avantage, pas sa taille, qui a emporté la conclusion |
 
 Le deuxième échange est le plus instructif : une recommandation correcte en général s'est
 révélée fausse dans ce cas précis, et seule la mesure permettait de le voir.
+
+**Révision.** La version corrigée du duel, en plis groupés et avec une règle de choix fixée
+avant le calcul, a été menée avec Claude Code à partir des retours de la formatrice.

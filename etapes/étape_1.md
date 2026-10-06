@@ -5,7 +5,7 @@
 Documenter et valider l'extraction des données avant l'EDA : sources, formats, problèmes
 détectés, décisions prises.
 
-Notebook associé : [`Projet/notebooks/etape_1_extraction.ipynb`](../notebooks/etape_1_extraction.ipynb)
+Notebook associé : [`etape_1_extraction.ipynb`](../notebooks/etape_1_extraction.ipynb)
 
 **L'extraction est rejouée dans le notebook**, avec une garde de cache : le fichier brut
 n'est retraité que si l'un des jeux produits est absent. L'entonnoir de filtrage est donc
@@ -19,7 +19,7 @@ reproductible, pas seulement documenté.
 
 | Élément | Valeur |
 |---|---|
-| Fichier | `Projet/csv/dataset.csv` |
+| Fichier | `csv/dataset.csv` |
 | Contenu | INSERSUP, insertion professionnelle des diplômés du supérieur |
 | Millésime de diffusion | `2026_S1` |
 | Format | CSV |
@@ -38,7 +38,7 @@ reproductible, pas seulement documenté.
 | Élément | Valeur |
 |---|---|
 | Jeu | `fr-esr-principaux-etablissements-enseignement-superieur` |
-| Fichier local | `Projet/csv/referentiel_etablissements.json` |
+| Fichier local | `csv/referentiel_etablissements.json` |
 | Format | **JSON**, via l'API REST Explore v2.1 (Opendatasoft) |
 | Point d'accès | `data.enseignementsup-recherche.gouv.fr/api/explore/v2.1/catalog/datasets/fr-esr-principaux-etablissements-enseignement-superieur/exports/json` |
 | Taille | 805 Ko |
@@ -163,8 +163,8 @@ absentes. À mentionner comme limite du projet.
 
 | Source | Format | Fichier | Lignes | Colonnes | Observations |
 |---|---|---|---|---|---|
-| 1 | CSV | `Projet/csv/dataset.csv` | 1 036 781 | 101 | BOM UTF-8, `sep=';'`, manquants `nd`/`ns`, 9 colonnes entièrement vides, agrégats mélangés au détail |
-| 2 | JSON | `Projet/csv/referentiel_etablissements.json` | 245 | 100 | API REST, champs imbriqués (listes et objets) à aplatir, clé `uai` unique, couvre 79,7 % des lignes de la source 1 |
+| 1 | CSV | `csv/dataset.csv` | 1 036 781 | 101 | BOM UTF-8, `sep=';'`, manquants `nd`/`ns`, 9 colonnes entièrement vides, agrégats mélangés au détail |
+| 2 | JSON | `csv/referentiel_etablissements.json` | 245 | 100 | API REST, champs imbriqués (listes et objets) à aplatir, clé `uai` unique, couvre 79,7 % des lignes de la source 1 |
 
 ---
 
@@ -285,12 +285,12 @@ Phase 2, EDA diagnostique sur `csv/dataset_phase1_analytique.csv`.
 
 ## Utilisation de l'IA sur cette étape
 
-> **Échanges reconstitués a posteriori.** L'historique de l'outil n'a pas été conservé pour
-> cette étape : la formulation des prompts est approximative. Ce qui est vérifiable, c'est
-> la dernière colonne, visible dans le notebook.
-
 | Prompt utilisé | Ce que l'IA a produit | Vérification effectuée |
 |---|---|---|
-| « Comment lire un CSV de 773 Mo séparé par des points-virgules sans saturer la mémoire ? » | Lecture par blocs avec `chunksize`, `dtype` et `usecols` | Retenu, puis complété par `utf-8-sig` après constat du BOM sur la première colonne, et par `na_values=["nd", "ns"]` après inspection des valeurs |
-| « Pourquoi ma colonne cible ne contient-elle aucune valeur ? » | Hypothèses : mauvais séparateur, mauvais encodage, codes de non-diffusion | Toutes écartées par un diagnostic de remplissage sur tout le fichier : la colonne est réellement vide sur 1 036 781 lignes, comme huit autres. Cible révisée |
-| « Écris le code pour interroger l'API Explore v2.1 et joindre le JSON au CSV par code UAI » | Requête d'export et `merge` | Jointure passée en `left` avec un `assert` sur le nombre de lignes, pour qu'aucune observation ne disparaisse. Couverture mesurée (79,7 %) plutôt que supposée |
+| « Ce CSV de 773 Mo a un BOM et des codes `nd`/`ns` : quels paramètres `read_csv` ? » | `encoding='utf-8-sig'`, `na_values`, lecture par blocs | Comparaison du nom de la première colonne avec et sans `utf-8-sig` |
+| « Comment détecter les lignes de total dans un fichier statistique qui mélange marges et détail ? » | Piste des modalités `ensemble` / `National` / `Tous ...` | Recensement exhaustif des modalités de chaque colonne de dimension avant d'écrire les filtres |
+| « Ma cible est vide sur 1 M de lignes, comment choisir une cible de remplacement ? » | Mesurer le taux de remplissage réel de chaque colonne candidate | Remplissage recalculé colonne par colonne, choix tranché sur les 42,3 % de `6-Taux d'emploi salarié en France` |
+
+Le code d'extraction a été relu ligne à ligne : la garde de cache et l'ordre des filtres
+de l'entonnoir ont été corrigés à la main, l'IA proposant initialement de charger le
+fichier entier en mémoire.

@@ -3,7 +3,7 @@
 Ce document est le fil conducteur des 18 visualisations du projet. Chacune répond à une
 question posée avant de la tracer, et chaque titre de section énonce **ce que la figure
 montre**, pas ce qu'elle représente. Les figures sont produites par les notebooks des
-étapes 2, 4, 5 et 6 ; aucun chiffre n'est saisi à la main ici.
+étapes 2, 4, 5, 5b, 5c et 6 ; aucun chiffre n'est saisi à la main ici.
 
 La question à laquelle tout ce qui suit se rapporte : **peut-on prédire le taux d'emploi
 salarié d'une formation six mois après le diplôme, à partir de ses seules
@@ -118,7 +118,7 @@ le taux d'emploi n'est que de 0,017.
 
 Autrement dit, l'effectif ne dit pas si une formation insère bien, il dit **avec quelle
 précision on peut le mesurer**. Sur 20 diplômés, un seul individu vaut 5 points de taux.
-Cette figure annonce l'hypothèse que l'étape 5 confirmera : l'erreur du modèle sera plus
+Cette figure annonce l'hypothèse que l'étape 5c confirmera : l'erreur du modèle sera plus
 forte sur les petites formations.
 
 ---
@@ -155,7 +155,7 @@ pas par les formations : il pointe vers le marché du travail au moment de la so
 
 D'où deux décisions opposées mais cohérentes : fournir la promotion au modèle, puisqu'elle
 porte un effet de conjoncture réel, et accepter qu'il ne saura pas anticiper un choc
-inédit. L'étape 5 chiffre ce coût.
+inédit. L'étape 5c chiffre ce coût.
 
 ---
 
@@ -194,84 +194,87 @@ que le laisser découvrir.
 
 ## Acte 5 : que vaut le modèle, et où échoue-t-il ?
 
-### 12. Deux modèles d'ensemble se détachent, et la référence naïve fixe le repère
+Toutes les figures de cet acte sont mesurées en **validation croisée groupée par
+formation** : un modèle n'y est jamais évalué sur une promotion d'une formation dont il a vu
+les autres. Le jeu de test, ouvert une seule fois à l'étape 5c, ne sert qu'au score final.
+
+### 12. Le boosting se détache, et la référence naïve fixe le repère
 
 ![Comparaison des modèles](figures_eda/fig12_comparaison_modeles.png)
 
-En validation croisée à 5 plis : forêt aléatoire 9,49 de MAE, gradient boosting 9,52,
-régression linéaire et Ridge 10,41, arbre seul 13,17, référence naïve 14,97.
+En validation croisée groupée à 5 plis : gradient boosting 10,02 de MAE, forêt aléatoire
+10,28, régression linéaire et Ridge 10,62, arbre seul 14,25, référence naïve 15,05.
 
-Le panneau de droite justifie le choix final. L'arbre de décision atteint un R carré
-d'entraînement de 1,00 pour 0,12 en validation : c'est le contre-exemple utile, celui qui
-montre ce que le surapprentissage fait à un modèle. La forêt et le gradient boosting étant
-à égalité, c'est la stabilité entre plis qui départage, pas une troisième décimale.
+Le panneau de droite montre le surapprentissage. L'arbre de décision atteint un R carré
+d'entraînement de 1,00 pour 0,004 en validation : sur des formations inconnues, il ne fait
+presque pas mieux que la moyenne. La forêt garde un écart important (0,90 contre 0,47), le
+boosting beaucoup moins (0,66 contre 0,51).
 
-### 13. Le meilleur score de la grille n'est pas le modèle retenu
+### 13. La grille de la forêt départage mal, et c'est une information
 
 ![Grille d'hyperparamètres](figures_eda/fig13_grille_hyperparametres.png)
 
-La meilleure combinaison de la grille donne 9,365 de MAE et 0,377 d'écart entre
-entraînement et validation. La configuration retenue par la règle à un écart-type donne
-9,438, soit 0,073 point de moins bien, pour un écart ramené à **0,332**.
+14 configurations sur 16 sont à moins d'un écart-type de la meilleure : en validation
+groupée, la variabilité entre plis dépasse les écarts entre réglages. La règle à un
+écart-type retient la plus simple (`min_samples_leaf=10`), pour 0,19 point de RMSE de plus
+que la meilleure et un écart entraînement / validation ramené de 0,29 à **0,18**. Des
+feuilles plus grandes réduisent le surapprentissage, et c'est ce que la figure montre.
 
-Le choix est assumé : 0,073 point de MAE est invisible pour un utilisateur, un écart
-d'entraînement plus faible est une promesse de meilleure tenue sur des données nouvelles.
-Des feuilles plus grandes réduisent le surapprentissage, et c'est ce que la figure montre.
-
-### 14. Le modèle réduit l'erreur d'un tiers, et se trompe sans biais
+### 14. Le modèle se trompe sans biais global, mais ramène les extrêmes vers la moyenne
 
 ![Analyse des résidus](figures_eda/fig14_residus.png)
 
-Sur le jeu de test, ouvert une seule fois : 9,58 points de MAE contre 15,07 pour la
-référence naïve, soit **36 % d'erreur en moins**, pour un R carré de 0,554.
+Résidus du gradient boosting retenu, sur des prédictions hors pli. Le résidu moyen est quasi
+nul (+0,13 point), mais le nuage « prédit contre observé » est aplati : les formations qui
+insèrent à 85 % ou plus sont sous-estimées de 15 points en moyenne, celles qui insèrent à
+25 % ou moins surestimées de 23 points. Le modèle est le moins fiable exactement là où une
+formation se distingue.
 
-Les résidus sont centrés (médiane -0,01 point) et sans structure visible : la pente de la
-droite résidus contre prédictions est de +0,015. Le modèle ne surestime ni ne sous-estime
-systématiquement. Il reste 46 % de variance inexpliquée, cohérent avec une cible qui dépend
-aussi du marché local de l'emploi, absent des données.
+Sur le jeu de test, ouvert une seule fois : **10,09 points de MAE** contre 14,77 pour la
+référence naïve, soit **32 % d'erreur en moins**, pour un R carré de 0,484. Ce score
+rejoint à 0,006 point celui de la validation croisée groupée.
 
 ### 15. Le modèle s'appuie sur la vocation du diplôme, exactement comme l'EDA l'annonçait
 
 ![Importance des variables](figures_eda/fig15_importance_variables.png)
 
-Par permutation sur le jeu de test : `est_diplome_professionnalisant` dégrade la RMSE de
-3,028 points quand on la mélange, `ratio_poursuite` de 1,571, `nb_etablissements_par_diplome`
-de 1,221.
+Par permutation, moyennée sur les cinq plis groupés : `est_diplome_professionnalisant`
+dégrade la RMSE de 3,93 points quand on la mélange, `ratio_poursuite` de 1,32,
+`anciennete_promotion` de 0,95, `nb_etablissements_par_diplome` de 0,86. Les quatre
+premières sont des variables créées à l'étape 3.
 
-Les deux premières confirment les hypothèses 1 et 2 de l'étape 2. Mais deux hypothèses
-sont **infirmées** : le secteur disciplinaire ne prime pas sur le domaine, et découper
-l'effectif en tranches n'apporte rien. Le modèle sert aussi à cela, trancher des intuitions
-formées sur des moyennes.
+Le ratio de poursuite confirme l'hypothèse 1 de l'étape 2. Mais l'hypothèse 2 est
+**infirmée** : le secteur disciplinaire (0,49) ne prime pas sur le domaine (0,76), les deux
+étant redondants. Le modèle sert aussi à cela, trancher des intuitions formées sur des
+moyennes.
 
-### 16. L'erreur double entre les grandes et les petites formations
+### 16. L'erreur est 1,6 fois plus forte sur les petites formations
 
 ![Erreur par groupe](figures_eda/fig16_erreurs_par_groupe.png)
 
-De 6,33 points de MAE sur les formations de plus de 90 sortants à **12,09 points** sur
-celles de 25 sortants ou moins. Un rapport de près de deux entre les extrêmes.
+De 7,47 points de MAE sur les formations de plus de 90 sortants à **11,75 points** sur
+celles de 25 sortants ou moins.
 
 C'est la confirmation de l'hypothèse 4, et surtout la précision qui manque quand on annonce
-« 9,58 points d'erreur » : cette moyenne recouvre deux situations très différentes. La
-promotion 2020 reste la plus difficile, avec un biais de surestimation, faute pour le modèle
-de pouvoir représenter un choc conjoncturel.
+« 10 points d'erreur » : cette moyenne recouvre des situations très différentes. La
+promotion 2020 reste la plus difficile (10,75), faute pour le modèle de pouvoir représenter
+un choc conjoncturel.
 
-### 17. Forêt et gradient boosting prédisent presque la même chose
+### 17. Le boosting gagne, mais les deux modèles prédisent presque la même chose
 
 ![Duel forêt contre boosting](figures_eda/fig18_duel_foret_boosting.png)
 
-Une fois chacun optimisé sur sa propre grille, les deux familles de modèles arrivent à
-9,44 et 9,24 points de MAE. Le nuage de droite montre pourquoi l'écart importe peu : leurs
-prédictions corrèlent à 0,953 et ne divergent de plus de 10 points que sur 2,4 % des
-formations.
+Une fois chacun optimisé sur sa propre grille, le gradient boosting l'emporte : 10,08 de MAE
+contre 10,26 pour la forêt, sur les cinq plis et sur 13 des 14 découpages par groupe. C'est
+lui qui est livré. Le nuage de droite montre pourtant que l'écart importe peu : leurs
+prédictions corrèlent à 0,966 et ne divergent de plus de 10 points que sur 0,9 % des
+lignes.
 
-Le panneau de gauche explique cette proximité : ils s'appuient sur les mêmes variables, dans
-le même ordre, avec des intensités différentes. Le boosting tire deux fois plus de
+Le panneau de gauche explique cette proximité : ils s'appuient sur les mêmes variables, avec
+des intensités différentes. Le boosting tire près de deux fois plus de
 `est_diplome_professionnalisant`, mais il n'a pas trouvé un signal que la forêt aurait
-manqué.
-
-Cette figure sert un argument de méthode plus qu'un choix de modèle : quand deux approches
-très différentes convergent sur les mêmes variables et les mêmes prédictions, c'est que le
-signal est dans les données, pas dans l'algorithme.
+manqué. Quand deux approches très différentes convergent sur les mêmes variables et les
+mêmes prédictions, c'est que le signal est dans les données, pas dans l'algorithme.
 
 ---
 
@@ -292,7 +295,7 @@ signal est dans les données, pas dans l'algorithme.
 
 ## Choix des figures pour la soutenance
 
-Sept minutes ne permettent pas seize figures. Les sept qui portent le récit complet :
+Sept minutes ne permettent pas dix-huit figures. Les sept qui portent le récit complet :
 
 | Ordre | Figure | Ce qu'elle prouve |
 |---|---|---|
@@ -301,7 +304,7 @@ Sept minutes ne permettent pas seize figures. Les sept qui portent le récit com
 | 3 | `fig09_q5_promotions` | L'effet conjoncturel, simultané sur quatre domaines |
 | 4 | `fig10_correlations` | La fuite de données évitée, et le plafond réaliste |
 | 5 | `fig12_comparaison_modeles` | Le modèle contre la référence naïve |
-| 6 | `fig15_importance_variables` | Ce que le modèle a appris, et les hypothèses infirmées |
+| 6 | `fig15_importance_variables` | Ce que le modèle a appris, et l'hypothèse infirmée |
 | 7 | `fig16_erreurs_par_groupe` | Où le modèle échoue, annoncé avant la question |
 
 `fig07_q3_genre` est la figure de réserve : c'est le résultat le plus frappant du projet, à
@@ -312,7 +315,7 @@ sortir si le temps le permet ou si le jury demande une découverte inattendue.
 ## Conventions graphiques
 
 Toutes les figures partagent les mêmes règles, appliquées par un bloc `rcParams` commun aux
-notebooks des étapes 2, 4 et 5 :
+notebooks des étapes 2, 4, 5, 5b et 5c :
 
 - **Titres porteurs de message.** Un titre énonce le constat, pas le contenu : « L'écart
   entre types de diplôme atteint 46 points d'insertion » plutôt que « Taux par type de

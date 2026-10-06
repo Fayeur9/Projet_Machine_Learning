@@ -5,12 +5,18 @@
 Exécuter le cahier des charges produit par le rapport de qualité de l'étape 2, enrichir le
 jeu, le documenter, puis le séparer en apprentissage et test.
 
-Notebook : [`Projet/notebooks/etape_3_preparation.ipynb`](../notebooks/etape_3_preparation.ipynb)
+Notebook : [`etape_3_preparation.ipynb`](../notebooks/etape_3_preparation.ipynb)
 
 La règle qui gouverne l'étape : **rien de ce qui s'apprend sur les données ne se fait ici**.
-Imputation, encodage et mise à l'échelle appartiennent à la pipeline des étapes 4 et 5. Ce
-qui se fait ici, ce sont des corrections d'erreurs et des calculs déterministes ligne à
-ligne.
+Imputation, encodage, mise à l'échelle et agrégats de contexte appartiennent à la pipeline,
+définie dans [`modeles/protocole.py`](../modeles/protocole.py). Ce qui se fait ici, ce sont
+des corrections d'erreurs et des calculs déterministes ligne à ligne.
+
+> **Révision du protocole** (voir [étape 10](étape_10_revision.md)). La première version
+> calculait ici quatre variables agrégées sur le jeu complet, test compris, et découpait
+> ligne à ligne alors qu'une formation apparaît jusqu'à six fois. Les agrégats sont
+> désormais appris dans la pipeline, sur les seules lignes d'entraînement, et le découpage
+> est groupé par formation.
 
 ---
 
@@ -72,31 +78,47 @@ d'inventer des corrections pour remplir un journal.
 
 ## 2. Feature engineering
 
-Dix variables créées, couvrant les cinq familles attendues. Chacune répond à une hypothèse
-formulée à la fin de l'étape 2.
+Neuf variables enrichissent le jeu, couvrant les cinq familles attendues. Chacune répond à
+une hypothèse formulée à la fin de l'étape 2. Six se calculent ici, ligne à ligne ; trois
+lisent d'autres lignes que la leur et sont donc apprises **dans la pipeline**.
 
-| Famille | Variable | Lien avec la cible |
-|---|---|---:|
-| Indicateur | `est_diplome_professionnalisant` | **+0,407** |
-| Calculée | `ratio_poursuite` | **−0,311** |
-| Agrégée | `taille_mediane_secteur` | **+0,239** |
-| Indicateur | `promotion_choc_sanitaire` | −0,181 |
-| Calculée | `taille_formation` | −0,151 |
-| Temporelle | `anciennete_promotion` | −0,105 |
-| Agrégée | `part_sortants_etablissement` | −0,032 |
-| Agrégée | `nb_formations_etablissement` | +0,032 |
-| Agrégée | `nb_etablissements_par_diplome` | +0,020 |
-| Catégorielle | `tranche_effectif` | eta² = 0,003 |
+| Famille | Variable | Calculée | Lien avec la cible |
+|---|---|---|---:|
+| Indicateur | `est_diplome_professionnalisant` | ici | **+0,407** |
+| Calculée | `ratio_poursuite` | ici | **−0,311** |
+| Indicateur | `promotion_choc_sanitaire` | ici | −0,181 |
+| Calculée | `taille_formation` | ici | −0,151 |
+| Temporelle | `anciennete_promotion` | ici | −0,105 |
+| Catégorielle | `tranche_effectif` | ici | eta² = 0,003 |
+| Agrégée | `taille_mediane_secteur` | pipeline | +0,234 |
+| Agrégée | `nb_formations_etablissement` | pipeline | +0,043 |
+| Agrégée | `nb_etablissements_par_diplome` | pipeline | +0,019 |
 
-Trois variables portent un signal net. `ratio_poursuite` confirme directement l'hypothèse 1
+Les liens des trois agrégées sont mesurés sur le seul jeu d'apprentissage, après ajustement
+du transformateur.
+
+Deux variables portent un signal net. `ratio_poursuite` confirme directement l'hypothèse 1
 de l'étape 2 : plus la part de diplômés qui poursuivent leurs études est élevée, plus le
 taux d'emploi salarié baisse.
 
-Les quatre dernières sont presque plates. Elles sont **conservées quand même** : une
-corrélation linéaire faible n'exclut pas un apport en interaction dans une forêt. L'étape 5
-tranche sur l'importance réelle des variables, et le résultat est instructif :
-`nb_etablissements_par_diplome`, dont la corrélation vaut 0,02, ressort parmi les variables
-les plus utiles au modèle.
+Les variables presque plates sont **conservées quand même** : une corrélation linéaire
+faible n'exclut pas un apport en interaction dans un modèle d'arbres. L'étape 5c tranche
+sur l'importance réelle des variables, et le résultat est instructif :
+`nb_etablissements_par_diplome`, dont la corrélation vaut 0,02, arrive 4e des 18.
+
+### Pourquoi les agrégats sont dans la pipeline
+
+Les trois agrégées lisent d'autres lignes, dont des lignes qui finiront dans le jeu de
+test. Calculées ici, sur le jeu complet, elles feraient entrer dans l'apprentissage une
+information tirée du test, et créeraient un écart entre la valeur vue à l'entraînement et
+celle calculée à l'inférence. Elles sont donc apprises par le transformateur
+`AgregatsContexte`, première étape de la pipeline, sur les seules lignes d'entraînement de
+chaque pli. Le même objet ajusté sert ensuite à l'inférence : une clé inconnue
+(établissement ou diplôme jamais vu) retombe sur la médiane de la table.
+
+`part_sortants_etablissement`, quatrième agrégat de la première version, est **retirée** :
+son dénominateur, les sortants de l'établissement pour la promotion, n'est pas
+reconstructible pour une formation nouvelle. Elle ne pesait que 14e sur 19.
 
 ### Redondances assumées
 
@@ -104,46 +126,47 @@ les plus utiles au modèle.
 `Promotion`, elle-même fournie comme variable catégorielle. Ce n'est pas un oubli :
 l'encodage one-hot donne un effet libre par année, `anciennete_promotion` donne une
 variable ordonnée sur laquelle un arbre peut couper une fois pour toutes, et
-`promotion_choc_sanitaire` isole explicitement l'hypothèse testée. L'étape 5 dit laquelle
-des trois formes le modèle utilise réellement.
+`promotion_choc_sanitaire` isole explicitement l'hypothèse testée. L'étape 5c montre que le
+modèle utilise surtout la forme ordonnée.
 
-### Contrôle anti-fuite
+### Découpage et contrôles anti-fuite
 
-Aucune variable créée n'utilise la cible. Deux tests exécutables le vérifient, et tous deux
-rejouent le dictionnaire `VARIABLES_CREEES` qui sert à construire les variables : ils
-portent donc sur les dix variables réelles, sans liste recopiée à côté qui pourrait dériver.
+Le découpage est fait **avant** tout ce qui lit d'autres lignes que la sienne, et il est
+**groupé par formation** (code UAI × code SISE), par `decouper()` dans
+`modeles/protocole.py`.
 
-1. **Indépendance à la cible.** La cible est permutée aléatoirement, puis **les dix
-   variables** sont recalculées : elles sont strictement identiques. Un `assert` échoue
-   sinon.
-2. **Sensibilité au découpage.** **Quatre variables** lisent d'autres lignes que la leur.
-   Recalculées sur le seul jeu d'apprentissage :
+| Sous-ensemble | Lignes | Part | Formations | Moyenne de la cible | Écart-type |
+|---|---:|---:|---:|---:|---:|
+| Apprentissage | 13 718 | 80,4 % | 3 958 | 55,90 | 18,53 |
+| Test | 3 347 | 19,6 % | 990 | 55,83 | 18,22 |
 
-| Variable | Écart médian | Écart maximal | Lignes modifiées | Corrélation |
-|---|---:|---:|---:|---:|
-| `taille_mediane_secteur` | 0,00 % | 15,79 % | 44,8 % | 0,9970 |
-| `nb_formations_etablissement` | 4,20 % | 50,00 % | 77,1 % | 0,9986 |
-| `part_sortants_etablissement` | **20,95 %** | 3 791 % | 89,2 % | 0,9734 |
-| `nb_etablissements_par_diplome` | 0,00 % | 66,67 % | 40,9 % | 0,9982 |
+**Aucune formation n'est présente des deux côtés**, ce qu'un `assert` vérifie.
 
-Trois de ces variables décrivent le catalogue d'un établissement ou la taille usuelle d'un
-secteur : un référentiel les donnerait avant toute prédiction, et elles ne bougent quasiment
-pas selon le découpage.
+Trois contrôles exécutables suivent, et rejouent les définitions réelles des variables :
 
-`part_sortants_etablissement` fait exception, et c'est mécanique : elle divise par la somme
-des sortants de l'établissement pour une promotion, somme que le retrait de 20 % des lignes
-ampute. Ce n'est pas une fuite de cible, le premier test l'exclut, mais c'est une variable
-non reproductible à partir du seul jeu d'apprentissage. Elle est conservée parce qu'en usage
-réel l'effectif d'un établissement est connu du référentiel et non reconstitué depuis un
-échantillon, et parce que son poids reste modeste : 14e sur 19 à l'importance par
-permutation de l'étape 5. Le point est écrit plutôt que laissé à découvrir.
+1. **Indépendance à la cible.** La cible est permutée, puis les six variables ligne à ligne
+   et les trois agrégats sont recalculés : aucun ne bouge.
+2. **Isolement du transformateur, côté apprentissage.** Des lignes de test volontairement
+   altérées (effectifs multipliés par 100, codes inconnus) ne changent rien aux agrégats
+   calculés pour l'apprentissage.
+3. **Isolement du transformateur, côté test.** Mélanger l'ordre des lignes de test ne
+   change la valeur d'aucune : chaque ligne est décrite avec ce qui a été appris sur
+   l'apprentissage, jamais avec les autres lignes de test.
+
+Conséquence concrète du découpage groupé : `taille_mediane_secteur` est connue pour 100 %
+des lignes de test, `nb_formations_etablissement` pour 96,7 %, mais
+`nb_etablissements_par_diplome` pour 80,8 % seulement. Un diplôme propre à un seul
+établissement n'a, par construction, jamais été vu à l'apprentissage. C'est exactement la
+situation d'une formation nouvelle en usage réel.
 
 ---
 
 ## 3. Périmètre du modèle
 
-**19 variables explicatives** : 8 catégorielles, 11 numériques, dont 10 créées à cette
-étape. Aucune valeur manquante.
+**18 variables explicatives** : 8 catégorielles, 10 numériques, dont 6 créées à cette étape
+et 3 apprises dans la pipeline. La pipeline reçoit 17 colonnes : les variables ligne à
+ligne et les deux codes dont le transformateur d'agrégats a besoin. Aucune valeur
+manquante.
 
 ### Variables exclues
 
@@ -153,7 +176,8 @@ permutation de l'étape 5. Le point est écrit plutôt que laissé à découvrir
 | Taux et nombre en emploi stable | Fuite de cible | Résultat d'insertion au même horizon que la cible |
 | Taux et nombre en emploi non salarié | Fuite de cible | Résultat d'insertion au même horizon que la cible |
 | `Établissement`, `Libellé du diplôme` | Cardinalité | 329 et 1 290 modalités : le modèle mémoriserait |
-| `Code UAI`, `Code SISE` | Identifiant | Exploités via les variables agrégées dérivées |
+| `Code UAI`, `Code SISE` | Identifiant | Lus par le transformateur d'agrégats, jamais transmis au modèle |
+| `part_sortants_etablissement` | Non reproductible | Dénominateur impossible à reconstituer pour une formation nouvelle |
 | `promotion_debut` | Redondance | Supprimé au nettoyage |
 
 ---
@@ -161,39 +185,31 @@ permutation de l'étape 5. Le point est écrit plutôt que laissé à découvrir
 ## 4. Dictionnaire de données
 
 Généré depuis le jeu final, donc impossible à désynchroniser des données réelles. Un
-`assert` échoue si une colonne n'est pas décrite. 32 colonnes documentées avec type, rôle,
-manquants, modalités, exemple et description.
+`assert` échoue si une colonne n'est pas décrite. 28 colonnes documentées avec type, rôle,
+manquants, modalités, exemple et description, plus une section sur les trois variables
+calculées dans la pipeline.
 
-Fichier : [`Projet/DATA_DICTIONARY.md`](../DATA_DICTIONARY.md)
+Fichier : [`DATA_DICTIONARY.md`](../DATA_DICTIONARY.md)
 
 ---
 
-## 5. Export et séparation
+## 5. Export
 
-Jeu final exporté : `csv/dataset_phase3_final.csv`, 17 065 × 32.
+Jeu final exporté : `csv/dataset_phase3_final.csv`, 17 065 × 28. Il ne contient aucun
+agrégat, ce qu'un `assert` vérifie.
 
-Découpage unique, réutilisé à l'identique aux étapes 4 et 5 :
-
-```python
-train_test_split(X, y, test_size=0.20, random_state=42)
-```
-
-| Sous-ensemble | Lignes | Part | Moyenne de la cible | Écart-type |
-|---|---:|---:|---:|---:|
-| Apprentissage | 13 652 | 80 % | 55,89 | 18,45 |
-| Test | 3 413 | 20 % | 55,89 | 18,53 |
-
-Six `assert` verrouillent le périmètre : cible absente de `X`, aucune variable postérieure
-à 6 mois, aucun identifiant, aucune valeur manquante, aucune ligne perdue, aucun
-recouvrement entre apprentissage et test.
+Six autres `assert` verrouillent le périmètre : cible absente des entrées, aucune variable
+postérieure à 6 mois, aucun identifiant transmis au modèle, aucune valeur manquante, aucune
+ligne perdue, aucun recouvrement de lignes ni de formations entre apprentissage et test.
 
 ### Ce qui n'est volontairement pas fait ici
 
-Aucun encodage, aucune mise à l'échelle, aucune imputation. Ces trois opérations apprennent
-quelque chose sur les données : les modalités présentes, la moyenne et l'écart-type, la
-valeur de remplacement. Les appliquer avant le découpage laisserait fuir dans
-l'apprentissage une information issue du test. Elles sont définies à l'étape 4 **à
-l'intérieur d'un `Pipeline`**, réajusté sur les seules données d'entraînement de chaque pli.
+Aucun encodage, aucune mise à l'échelle, aucune imputation, aucun agrégat. Ces opérations
+apprennent quelque chose sur les données : les modalités présentes, la moyenne et
+l'écart-type, la valeur de remplacement, les tailles typiques par groupe. Les appliquer
+avant le découpage laisserait fuir dans l'apprentissage une information issue du test.
+Elles sont toutes **à l'intérieur de la `Pipeline`**, réajustée sur les seules données
+d'entraînement de chaque pli.
 
 ---
 
@@ -212,25 +228,34 @@ l'intérieur d'un `Pipeline`**, réajusté sur les seules données d'entraîneme
 
 **Transformation et feature engineering**
 
-- [x] 10 variables créées, couvrant les 5 familles attendues
+- [x] 9 variables créées, couvrant les 5 familles attendues
 - [x] Chaque variable répond à une hypothèse formulée à l'étape 2
 - [x] Force du lien avec la cible mesurée pour chacune
+- [x] Agrégats appris dans la pipeline, sur l'apprentissage seul
 - [x] Contrôle anti-fuite par permutation de la cible
-- [x] Sensibilité des agrégats au découpage mesurée
+- [x] Isolement du transformateur vérifié dans les deux sens
 - [x] Dictionnaire de données généré depuis le jeu réel
 - [x] Jeu final exporté
-- [x] Découpage apprentissage / test unique et reproductible
+- [x] Découpage apprentissage / test unique, reproductible et groupé par formation
 
 ---
 
 ## Utilisation de l'IA sur cette étape
 
-> **Échanges reconstitués a posteriori.** L'historique de l'outil n'a pas été conservé pour
-> cette étape : la formulation des prompts est approximative. Ce qui est vérifiable, c'est
-> la dernière colonne, visible dans le notebook.
-
 | Prompt utilisé | Ce que l'IA a produit | Vérification effectuée |
 |---|---|---|
-| « Propose des variables pour prédire le taux d'emploi d'une formation » | Liste de variables, dont des moyennes de la cible par groupe | Les agrégats de la cible sont écartés, car ce serait une fuite hors pipeline. Dix variables conservées, chacune rattachée à une hypothèse de l'étape 2 |
-| « Comment prouver qu'une variable créée ne fuit pas la cible ? » | Vérifier qu'aucune formule n'utilise y | Transformé en test exécutable (permutation de la cible puis recalcul), complété par la sensibilité au découpage, qui a révélé le cas `part_sortants_etablissement` |
-| « Génère un dictionnaire de données pour ce jeu » | Tableau des colonnes à remplir | Généré depuis le jeu réel, avec un `assert` qui échoue si une colonne n'est pas décrite |
+| « Quelles features créer à partir d'effectifs de sortants et de poursuivants ? » | Ratio de poursuite, effectif total, tranches | Corrélation de chaque piste mesurée avant de la retenir ; le ratio ressort à −0,31, les tranches beaucoup moins |
+| « Est-ce une fuite de données de calculer une moyenne par groupe avant le split ? » | Distinction entre agrégat de `X` et agrégat de `y` | Traduite en test exécutable : permutation de la cible, puis recalcul des agrégats sur le seul train |
+| « Comment journaliser un nettoyage de façon traçable ? » | Structure de log JSON par action | Fonction `journaliser` écrite à la main pour forcer une justification à chaque appel |
+| « Génère-moi un data dictionary » | Tableau Markdown statique rédigé à la main | Refusé : remplacé par une génération depuis le DataFrame, avec un `assert` qui échoue si une colonne n'est pas décrite |
+
+Le point le plus utile a été le deuxième : la réponse initiale de l'IA affirmait que tout
+agrégat calculé avant le découpage est une fuite. C'est faux tant que l'agrégat ne touche
+pas la cible, et la nuance a été transformée en deux tests plutôt qu'en affirmation.
+
+**Révision.** Cette nuance était incomplète, et la relecture de la formatrice l'a relevé :
+un agrégat de `X` calculé sur le jeu complet ne fait pas fuir la cible, mais il fait entrer
+dans l'apprentissage une information tirée des lignes de test, et il crée un écart entre
+l'entraînement et l'inférence. La réponse initiale de l'IA était donc plus prudente que la
+nuance retenue. Les agrégats sont désormais appris dans la pipeline, travail mené avec
+Claude Code à partir des retours de la formatrice.

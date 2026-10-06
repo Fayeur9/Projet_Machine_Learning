@@ -12,15 +12,17 @@ de reprise, et vérifie que la chaîne complète tourne encore de bout en bout.
 
 | Livrable | Fichier | Produit par |
 |---|---|---|
-| Jeu final nettoyé et enrichi | `csv/dataset_phase3_final.csv`, 17 065 × 32 | Étape 3 |
-| Dictionnaire de données | [`DATA_DICTIONARY.md`](../DATA_DICTIONARY.md), 32 colonnes | Étape 3, **généré** depuis le DataFrame |
-| Modèle entraîné, pipeline complète | `modeles/modele_final_random_forest.joblib`, 29,6 Mo | Étape 5 |
-| Code d'inférence | [`modeles/inference.py`](../modeles/inference.py) | Étape 7 |
+| Jeu final nettoyé et enrichi | `csv/dataset_phase3_final.csv`, 17 065 × 28 | Étape 3 |
+| Dictionnaire de données | [`DATA_DICTIONARY.md`](../DATA_DICTIONARY.md), 28 colonnes + 3 variables de pipeline | Étape 3, **généré** depuis le DataFrame |
+| Protocole commun (variables, découpage, pipeline) | [`modeles/protocole.py`](../modeles/protocole.py) | Rédigé, importé par les étapes 3 à 7 |
+| Choix du modèle | `modeles/choix_modele.json` | Étape 5b |
+| Modèle entraîné, pipeline complète | `modeles/modele_final.joblib`, 0,26 Mo | Étape 5c |
+| Code d'inférence | [`modeles/inference.py`](../modeles/inference.py) | Rédigé, testé à l'étape 7 |
 | Fiche modèle | [`MODEL_CARD.md`](../MODEL_CARD.md) | Étape 7, **générée** depuis le modèle chargé |
-| Figures | `figures_eda/`, 18 fichiers | Étapes 2, 4, 5, 5b, 6 |
+| Figures | `figures_eda/`, 18 fichiers | Étapes 2, 4, 5, 5b, 5c, 6 |
 | Récit visuel | [`Rapport_Visualisation.md`](../Rapport_Visualisation.md) | Étape 6 |
 | Journaux | `csv/nettoyage_log.json`, `csv/entonnoir_extraction.json` | Étapes 1 et 3 |
-| Documents d'étape | `etapes/`, 11 fichiers | Rédigés |
+| Documents d'étape | `etapes/`, 13 fichiers | Rédigés |
 
 **Trois de ces livrables sont générés, pas rédigés** : le dictionnaire de données depuis le
 DataFrame, la fiche modèle depuis le `.joblib`, et le support de soutenance depuis les
@@ -38,28 +40,30 @@ joblib et jupyter. Les versions utilisées ici sont pandas 3.0.3 et scikit-learn
 unzip csv.zip -d csv/          # les données ne sont pas versionnées
 cd notebooks
 jupyter nbconvert --to notebook --execute --inplace etape_1_extraction.ipynb
-# puis 2, 3, 4, 5, 5b, 6, 7 dans cet ordre
+# puis 2, 3, 4, 5, 5b, 5c, 6, 7 dans cet ordre
 ```
 
 L'ordre n'est pas indifférent : chaque notebook consomme ce que le précédent a écrit. Les
-étapes 6 et 7 lisent le modèle sauvegardé par l'étape 5.
+étape 5c lit le choix de l'étape 5b, les étapes 6 et 7 lisent le modèle sauvegardé par
+l'étape 5c.
 
 ### Temps mesurés
 
-Chaîne complète rejouée le jour de la rédaction, sur un portable, environnement déjà
+Chaîne complète rejouée après la révision du protocole, sur un portable, environnement déjà
 installé et données décompressées :
 
 | Notebook | Temps | Ce qui coûte |
 |---|---:|---|
 | `etape_1_extraction` | 8 s | Cache actif ; environ 4 min si l'extraction est forcée |
-| `etape_2_eda` | 11 s | Lecture du jeu analytique |
+| `etape_2_eda` | 13 s | Lecture du jeu analytique |
 | `etape_3_preparation` | 4 s | Nettoyage et feature engineering |
-| `etape_4_modelisation` | 1 min 41 | Six modèles en validation croisée |
-| `etape_5_optimisation_erreurs` | 3 min 46 | `GridSearchCV` et importance par permutation |
-| `etape_5b_duel_foret_boosting` | 7 min 11 | Deux grilles complètes, 34 configurations |
-| `etape_6_visualisation` | 11 s | Vue d'ensemble |
-| `etape_7_synthese_modele` | 4 s | Contrôles et fiche modèle |
-| **Total** | **13 min 16** | |
+| `etape_4_modelisation` | 2 min 16 | Six modèles en validation croisée groupée |
+| `etape_5_optimisation_erreurs` | 2 min 42 | `GridSearchCV` de la forêt |
+| `etape_5b_duel_foret_boosting` | 7 min 08 | Deux grilles complètes, 34 configurations |
+| `etape_5c_evaluation_finale` | 25 s | Diagnostic hors pli, test, livraison |
+| `etape_6_visualisation` | 5 s | Vue d'ensemble |
+| `etape_7_synthese_modele` | 5 s | Contrôles et fiche modèle |
+| **Total** | **13 min 06** | |
 
 **Les livrables sont régénérés à l'identique.** Après cette exécution complète, les sommes
 de contrôle du jeu final, du dictionnaire de données et du modèle `.joblib` sont inchangées.
@@ -82,8 +86,8 @@ jusqu'à ce que la figure soit intégrée au récit.
 ## 3. Ce qui rend le projet reproductible
 
 **Le hasard est fixé partout.** `random_state=42` sur le découpage, la validation croisée et
-tous les modèles. Le découpage 80 / 20 est identique aux étapes 3, 4, 5 et 5b, ce qu'un
-`assert` vérifie en comparant les cibles d'apprentissage.
+tous les modèles. Le découpage, groupé par formation, est défini une seule fois dans
+`modeles/protocole.py` et reproduit à l'identique par toutes les étapes.
 
 **L'extraction est mise en cache.** L'étape 1 ne relit les 738 Mo du fichier brut que si les
 jeux dérivés sont absents, ou si `FORCE_EXTRACTION` est activé. Rejouer la chaîne ne coûte
@@ -94,17 +98,20 @@ il les teste, et ces tests échouent si la propriété est perdue.
 
 | Contrôle | Où | Ce qu'il protège |
 |---|---|---|
-| Permutation de la cible sur les 10 variables créées | Étape 3 | Aucune variable ne dérive de `y` |
-| Recalcul des 4 agrégats sur le seul train | Étape 3 | Sensibilité au découpage mesurée |
-| Périmètre et disjonction train / test | Étape 3 | Pas de cible ni d'identifiant dans `X` |
+| Permutation de la cible sur les 9 variables créées | Étape 3 | Aucune variable ne dérive de `y` |
+| Isolement du transformateur d'agrégats, dans les deux sens | Étape 3 | Le test n'influence pas l'apprentissage |
+| Périmètre et disjonction des formations | Étape 3 | Pas de cible ni d'identifiant transmis au modèle |
 | Inventaire des figures et couverture des questions | Étape 6 | Aucune figure orpheline |
-| 8 contrôles de conformité sur le `.joblib` | Étape 7 | Le livrable reste conforme |
-| Non-régression du module d'inférence | Étape 7 | La préparation ne diverge pas de l'entraînement |
+| Identité entre inférence et pipeline | Étapes 5c et 7 | Aucun écart entre entraînement et inférence |
+| 10 contrôles de conformité, dont la lecture unique du test | Étape 7 | Le livrable et le protocole restent conformes |
+| Non-régression du module d'inférence | Étape 7 | La démonstration se reproduit |
 
-**Une limite honnête** : deux appels de prédiction successifs diffèrent d'environ 2×10⁻¹⁴,
-la forêt sommant ses arbres en parallèle. C'est quinze ordres de grandeur sous la précision
-d'une cible mesurée en points de pourcentage, mais ce n'est pas une égalité stricte, et le
-contrôle de l'étape 7 le dit plutôt que de l'ignorer.
+**Ce que la révision a montré.** Après la refonte du protocole, la chaîne a été rejouée de
+bout en bout : les neuf notebooks passent, et le modèle livré est identique au bit près
+d'une exécution à l'autre. La première version comportait une limite de reproductibilité,
+la forêt sommant ses arbres en parallèle avec un écart d'environ 2×10⁻¹⁴ ; le gradient
+boosting retenu n'a pas ce comportement, et l'écart mesuré entre inférence et pipeline est
+nul.
 
 ---
 
@@ -128,9 +135,9 @@ fichier brut, qui se retélécharge depuis le portail InserSup.
 2. Mettre à jour `MILLESIME` à l'étape 3, qui sert au calcul de l'ancienneté de promotion.
 3. Rejouer la chaîne dans l'ordre.
 4. Surveiller les points qui bougeront : la couverture de la cible, le périmètre après
-   entonnoir, et les modalités inconnues du référentiel d'inférence.
+   entonnoir, et la part de clés inconnues des agrégats de contexte.
 
-Les contrôles anti-fuite et les huit contrôles de conformité échouent si le nouveau millésime
+Les contrôles anti-fuite et les dix contrôles de conformité échouent si le nouveau millésime
 introduit une colonne problématique. C'est le but : la reprise doit casser bruyamment plutôt
 que produire un modèle discrètement faux.
 
@@ -141,7 +148,7 @@ que produire un modèle discrètement faux.
 - [x] Dataset final exporté
 - [x] Data Dictionary complet, généré depuis les données
 - [x] Notebooks structurés, commentés, exécutables en une passe
-- [x] Pipeline complète sauvegardée en `.joblib`, avec son référentiel et ses métriques
+- [x] Pipeline complète sauvegardée en `.joblib`, agrégats compris, avec ses métriques
 - [x] Démonstration de prédiction sur de nouvelles données brutes, modalité inconnue comprise
 - [x] Procédure de reprise écrite et chronométrée
 - [x] Fiche modèle et code d'inférence livrés avec le modèle

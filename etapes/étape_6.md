@@ -2,7 +2,7 @@
 
 ## Objectif
 
-Rendre lisible par un tiers ce que les étapes 2 à 5 ont établi. La phase ne demande pas
+Rendre lisible par un tiers ce que les étapes 2 à 5c ont établi. La phase ne demande pas
 de nouveaux calculs : elle demande que les figures existent, qu'elles soient correctes,
 qu'elles se tiennent entre elles, et qu'elles racontent quelque chose.
 
@@ -13,7 +13,7 @@ Récit complet : [`Rapport_Visualisation.md`](../Rapport_Visualisation.md)
 
 ## 1. Pourquoi cette étape ne retrace rien
 
-Les seize premières figures sont produites dans les notebooks des étapes 2, 4 et 5, là où
+Les autres figures sont produites dans les notebooks des étapes 2, 4, 5, 5b et 5c, là où
 les données sont déjà chargées, nettoyées et où le modèle est en mémoire. Les retracer ici
 imposerait de tout recharger pour un résultat identique.
 
@@ -35,7 +35,7 @@ supposent de regarder l'ensemble :
 | Comparaison de distributions | Boîtes à moustaches | La dispersion est le message : deux domaines de même moyenne diffèrent par l'étalement |
 | Évolution dans le temps | Courbes + bande | La continuité fait voir un mouvement là où des barres montreraient six valeurs isolées |
 | Liens entre variables | Heatmap divergente | Toutes les paires d'un coup, le signe lisible avant l'intensité |
-| Comparaison de modèles | Barres + barres d'erreur | Sans les barres d'erreur, 9,49 contre 9,52 passerait pour un écart réel |
+| Comparaison de modèles | Barres + barres d'erreur | Sans les barres d'erreur, impossible de savoir si 10,02 contre 10,28 dépasse le bruit entre plis |
 
 **Écartés volontairement** : aucun camembert (toutes les répartitions dépassent cinq
 catégories), aucune 3D (elle déforme les proportions sans rien ajouter).
@@ -75,8 +75,9 @@ Cinq actes, chacun ouvrant sur la question du suivant :
    comparaison appariée ; le creux de 2020 frappe les quatre domaines simultanément.
 4. **Que refuser de donner au modèle ?** Les mesures postérieures à six mois, précisément
    les plus corrélées à la cible.
-5. **Que vaut le modèle, et où échoue-t-il ?** 36 % d'erreur en moins que la référence
-   naïve, mais une erreur qui double sur les petites formations.
+5. **Que vaut le modèle, et où échoue-t-il ?** 32 % d'erreur en moins que la référence
+   naïve sur des formations jamais vues, mais une erreur 1,6 fois plus forte sur les
+   petites formations.
 
 Le développement figure par figure, avec les chiffres et les transitions, est dans
 [`Rapport_Visualisation.md`](../Rapport_Visualisation.md).
@@ -96,13 +97,14 @@ le plus. L'analyse et le modèle racontent la même histoire, et c'est ce qui re
 crédible.
 
 Les métriques affichées sont **lues dans le modèle sauvegardé**, jamais recalculées : le jeu
-de test n'a été ouvert qu'une fois, à l'étape 5.
+de test n'a été ouvert qu'une fois, à l'étape 5c. Le panneau (d) montre l'importance par
+permutation mesurée en validation croisée groupée, elle aussi lue dans le modèle livré.
 
 ---
 
 ## 6. Conventions graphiques
 
-Une même charte dans les quatre notebooks producteurs, ce qui rend les figures
+Une même charte dans les six notebooks producteurs, ce qui rend les figures
 reconnaissables comme appartenant au même projet :
 
 - **Titres porteurs de message** : « L'écart entre types de diplôme atteint 46 points »
@@ -125,7 +127,7 @@ reconnaissables comme appartenant au même projet :
 - [x] Axes labellisés avec unités
 - [x] Sources et périodes indiquées sur chaque figure
 - [x] Aucune mauvaise pratique : ni 3D, ni camembert, ni axe de taux tronqué
-- [x] Cohérence visuelle entre les quatre notebooks
+- [x] Cohérence visuelle entre les six notebooks producteurs
 - [x] Un fil narratif relie les visualisations
 - [x] L'audience peut comprendre sans explication orale
 - [x] Choix des types justifiés, y compris ceux écartés

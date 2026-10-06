@@ -1,6 +1,6 @@
 # Dictionnaire de données
 
-Jeu : `dataset_phase3_final.csv` · 17065 lignes × 32 colonnes
+Jeu : `dataset_phase3_final.csv` · 17065 lignes × 28 colonnes
 
 **Cible** : `6-Taux d'emploi salarié en France - 6 mois après le diplôme` (régression, taux en %)  
 **Clé primaire** : `Code UAI de l'établissement × Code du diplôme SISE × Promotion` (unique, 0 conflit)  
@@ -36,10 +36,18 @@ Jeu : `dataset_phase3_final.csv` · 17065 lignes × 32 colonnes
 | `taille_formation` | int64 | Variable explicative | 0 | 790 | 32 | CRÉÉE · Sortants + poursuivants : effectif total de la promotion |
 | `ratio_poursuite` | float64 | Variable explicative | 0 | 4335 | 0.3125 | CRÉÉE · Part de la promotion qui poursuit ses études (0 à 1) |
 | `tranche_effectif` | str | Variable explicative | 0 | 4 | très petite (≤ 25) | CRÉÉE · Classe de taille de la formation, en quatre tranches |
-| `taille_mediane_secteur` | float64 | Variable explicative | 0 | 28 | 40.0 | CRÉÉE · Nombre médian de sortants dans le secteur disciplinaire |
-| `nb_formations_etablissement` | int64 | Variable explicative | 0 | 68 | 1 | CRÉÉE · Nombre de diplômes distincts offerts par l'établissement |
-| `part_sortants_etablissement` | float64 | Variable explicative | 0 | 2397 | 1.0 | CRÉÉE · Part des sortants de l'établissement issus de cette formation |
-| `nb_etablissements_par_diplome` | int64 | Variable explicative | 0 | 41 | 1 | CRÉÉE · Nombre d'établissements délivrant ce diplôme |
+
+## Variables calculées dans la pipeline
+
+Trois variables du modèle ne figurent pas dans ce jeu : elles lisent d'autres lignes que la leur et sont donc apprises par `AgregatsContexte` (`modeles/protocole.py`), sur les seules lignes d'entraînement.
+
+| Variable | Description |
+|---|---|
+| `taille_mediane_secteur` | Nombre médian de sortants dans le secteur disciplinaire |
+| `nb_formations_etablissement` | Nombre de diplômes distincts offerts par l'établissement |
+| `nb_etablissements_par_diplome` | Nombre d'établissements délivrant ce diplôme |
+
+Une clé inconnue de l'apprentissage (nouvel établissement, nouveau diplôme) reçoit la valeur médiane de la table.
 
 ## Jointure vers une source externe
 

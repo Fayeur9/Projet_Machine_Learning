@@ -1,0 +1,17 @@
+{
+  "modele": "Gradient boosting",
+  "classe": "HistGradientBoostingRegressor",
+  "parametres": {
+    "max_iter": 400,
+    "early_stopping": false,
+    "learning_rate": 0.03,
+    "max_leaf_nodes": 15,
+    "min_samples_leaf": 20
+  },
+  "mae_validation_groupee": {
+    "Forêt aléatoire": 10.261,
+    "Gradient boosting": 10.084
+  },
+  "ecart_type_entre_plis": 0.147,
+  "regle": "MAE hors pli la plus faible en validation croisée groupée"
+}
